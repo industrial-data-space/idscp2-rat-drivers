@@ -1,0 +1,43 @@
+# Gradle
+.gradle/
+
+# Eclipse
+.metadata
+.project
+.settings
+.classpath
+*.launch
+/RemoteSystemsTempFiles/
+
+# IDEA
+*.iml
+/.idea
+
+# VSCode
+.vscode
+.factorypath
+
+# Binary
+/target/
+/*/target/
+/build/
+/*/build/
+/*/bin/
+/*/generated/
+
+# Sonar
+/.sonarlint/
+/dist-docker/
+
+# Other
+*.log
+/.recommenders/
+.DS_Store
+bin
+out
+
+# Lock files
+.lock
+
+# Version file
+/version.txt
