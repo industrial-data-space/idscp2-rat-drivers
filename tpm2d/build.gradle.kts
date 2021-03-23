@@ -29,7 +29,9 @@ val testImplementation by configurations
 
 dependencies {
     api("com.google.protobuf", "protobuf-java", "3.15.5")
+    api("com.github.microsoft", "TSS.Java", "0.3.0")
 
+    testImplementation("org.awaitility", "awaitility-kotlin", "4.0.3")
     testImplementation("junit", "junit", "4.13.2")
     testImplementation("org.mockito", "mockito-core", "3.8.0")
 }
