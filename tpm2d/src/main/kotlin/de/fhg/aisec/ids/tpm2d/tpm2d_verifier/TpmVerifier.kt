@@ -69,7 +69,7 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
             if (running) {
                 fsmListener.onRatVerifierMessage(InternalControlMessage.RAT_VERIFIER_FAILED)
             }
-            throw TpmException("Cannot parse TPM message", e)
+            throw TpmException("Interrupted or invalid message", e)
         }
     }
 
@@ -148,12 +148,16 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
         if (!checkSignature(resp, TpmHelper.calculateHash(nonce, config.localCertificate))) {
             sendRatResult(false)
             throw TpmException("Invalid TPM signature")
+        } else if (LOG.isDebugEnabled) {
+            LOG.debug("TPM signature valid and certificate trusted")
         }
 
         // validate pcr values
         if (!checkPcrValues(resp)) {
             sendRatResult(false)
             throw TpmException("Mismatch between pcr values and golden values")
+        } else if (LOG.isDebugEnabled) {
+            LOG.debug("PCR values trusted")
         }
 
         // notify fsm about success
@@ -164,10 +168,10 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
     }
 
     private fun checkPcrValues(response: TpmResponse): Boolean {
-        // val dat = fsmListener.remotePeerDat
-        assert(response.atype.name != "")
-        // TODO parse DAT and response and compare pcr values
-        return true
+        val dat = fsmListener.remotePeerDat
+        val pcr = response.pcrValuesList
+        // TODO parse DAT compare pcr values
+        return false
     }
 
     private fun checkSignature(response: TpmResponse, hash: ByteArray): Boolean {
@@ -194,18 +198,22 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
             // find the used issuer
             val certificateIssuer = certificate.issuerDN.name
 
+            var trusted = false
             for (caCert in rootCertificates) {
                 if (caCert.subjectDN.name == certificateIssuer) {
 
                     // Verify the TPM certificate
                     try {
                         certificate.verify(caCert.publicKey)
+                        trusted = true
                         break
-                    } catch (e: Exception) {
-                        LOG.warn("TPM certificate is invalid", e)
-                        return false
-                    }
+                    } catch (ignore: Exception) {}
                 }
+            }
+
+            if (!trusted) {
+                LOG.warn("TPM Certificate is not trusted")
+                return false
             }
 
             // Construct a new TPMT_SIGNATURE instance from byteSignature bytes
@@ -272,6 +280,7 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
             }
             if (tpmSigHashAlg != TPM_ALG_ID.SHA256.toInt()) {
                 LOG.warn("Only SHA256withRSA TPM signature hash algorithm is allowed")
+                return false
             }
             val sig = Signature.getInstance("SHA256withRSA")
             sig.initVerify(certificate.publicKey)

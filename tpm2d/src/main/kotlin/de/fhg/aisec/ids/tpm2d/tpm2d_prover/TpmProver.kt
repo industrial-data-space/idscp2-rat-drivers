@@ -62,7 +62,7 @@ class TpmProver(fsmListener: RatProverFsmListener) : RatProverDriver<TpmProverCo
             if (running) {
                 fsmListener.onRatProverMessage(InternalControlMessage.RAT_PROVER_FAILED)
             }
-            throw TpmException("Cannot parse TPM message", e)
+            throw TpmException("Interrupted or invalid message", e)
         }
     }
 
@@ -110,8 +110,8 @@ class TpmProver(fsmListener: RatProverFsmListener) : RatProverDriver<TpmProverCo
             // unexpected message
             fsmListener.onRatProverMessage(InternalControlMessage.RAT_PROVER_FAILED)
             throw TpmException("Missing TPM challenge")
-        } else if (LOG.isTraceEnabled) {
-            LOG.trace("Got rat challenge from rat verifier. Start TPM communication")
+        } else if (LOG.isDebugEnabled) {
+            LOG.debug("Got rat challenge from rat verifier. Start TPM communication")
         }
 
         val ratChallenge = ratVerifierMsg.ratChallenge
@@ -137,8 +137,8 @@ class TpmProver(fsmListener: RatProverFsmListener) : RatProverDriver<TpmProverCo
         }
 
         // create TpmResponse
-        if (LOG.isTraceEnabled) {
-            LOG.trace("Send rat response to verifier")
+        if (LOG.isDebugEnabled) {
+            LOG.debug("Send rat response to verifier")
         }
         val response = TpmMessageFactory.getAttestationResponseMessage(tpmResponse).toByteArray()
         fsmListener.onRatProverMessage(InternalControlMessage.RAT_PROVER_MSG, response)
@@ -150,14 +150,14 @@ class TpmProver(fsmListener: RatProverFsmListener) : RatProverDriver<TpmProverCo
         if (!ratVerifierMsg.hasRatResult()) {
             fsmListener.onRatProverMessage(InternalControlMessage.RAT_PROVER_FAILED)
             throw TpmException("Missing TPM result")
-        } else if (LOG.isTraceEnabled) {
-            LOG.trace("Got TPM result from TPM verifier")
+        } else if (LOG.isDebugEnabled) {
+            LOG.debug("Got TPM result from TPM verifier")
         }
 
         // notify fsm
         if (ratVerifierMsg.ratResult.result) {
-            if (LOG.isTraceEnabled) {
-                LOG.trace("TPM attestation succeed")
+            if (LOG.isDebugEnabled) {
+                LOG.debug("TPM attestation succeed")
             }
             fsmListener.onRatProverMessage(InternalControlMessage.RAT_PROVER_OK)
         } else {

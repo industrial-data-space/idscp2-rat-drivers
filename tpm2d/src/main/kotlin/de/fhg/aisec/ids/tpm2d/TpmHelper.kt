@@ -102,4 +102,19 @@ object TpmHelper {
         val trustAnchors = PKIXParameters(ks).trustAnchors
         return trustAnchors.stream().map { it.trustedCert }.collect(Collectors.toList())
     }
+
+    /**
+     * Load a specific certificate from key store
+     */
+    fun loadCertificate(keyStorePath: Path, keyStorePassword: CharArray, keyAlias: String): X509Certificate {
+        val ks = KeyStore.getInstance("PKCS12")
+        Files.newInputStream(keyStorePath).use { keyStoreInputStream ->
+            ks.load(keyStoreInputStream, keyStorePassword)
+        }
+        // get private key
+        val cert = ks.getCertificate(keyAlias) as X509Certificate
+        // Probe key alias
+        ks.getKey(keyAlias, keyStorePassword)
+        return cert
+    }
 }
