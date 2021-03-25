@@ -112,8 +112,4 @@ class Idscp2ServerInitiator : Idscp2EndpointListener<Idscp2Connection> {
     companion object {
         private val LOG = LoggerFactory.getLogger(Idscp2ServerInitiator::class.java)
     }
-
-    override fun onError(t: Throwable) {
-        // ignore
-    }
 }

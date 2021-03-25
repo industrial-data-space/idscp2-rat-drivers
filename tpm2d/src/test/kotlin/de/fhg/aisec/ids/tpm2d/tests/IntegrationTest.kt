@@ -170,10 +170,6 @@ class IntegrationTest {
                 override fun onConnection(connection: Idscp2Connection) {
                     connectionLatch.countDown()
                 }
-
-                override fun onError(t: Throwable) {
-                    throw t
-                }
             },
             serverIdscp2Config,
             NativeTLSDriver(),

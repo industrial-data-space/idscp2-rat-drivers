@@ -52,7 +52,7 @@ subprojects {
     dependencies {
         // Logging API
         api("org.slf4j", "slf4j-simple", "1.7.30")
-        api("de.fhg.aisec.ids", "idscp2", "0.3.4")
+        api("de.fhg.aisec.ids", "idscp2", "0.4.0")
         api("org.jetbrains.kotlin", "kotlin-stdlib-jdk8", "1.4.31")
     }
 
