@@ -168,10 +168,25 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
     }
 
     private fun checkPcrValues(response: TpmResponse): Boolean {
-        val dat = fsmListener.remotePeerDat
-        val pcr = response.pcrValuesList
-        // TODO parse DAT compare pcr values
-        return false
+
+        try {
+            // parse golden values from DAT
+            val goldenValues = PcrValues.parse(fsmListener.remotePeerDat)
+            if (LOG.isDebugEnabled) {
+                LOG.debug("Golden values: $goldenValues")
+            }
+
+            // parse pcr from response
+            val pcrValues = PcrValues.parse(response.pcrValuesList)
+            if (LOG.isDebugEnabled) {
+                LOG.debug("Peer PCR values: $pcrValues")
+            }
+
+            return pcrValues.isTrusted(goldenValues, config.expectedAType, config.expectedAttestationMask)
+        } catch (e: Exception) {
+            LOG.error("Cannot check PCR values against golden values", e)
+            return false
+        }
     }
 
     private fun checkSignature(response: TpmResponse, hash: ByteArray): Boolean {

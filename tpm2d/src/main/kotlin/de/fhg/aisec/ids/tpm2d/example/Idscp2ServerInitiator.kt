@@ -30,6 +30,7 @@ import de.fhg.aisec.ids.idscp2.idscp_core.api.idscp_server.Idscp2ServerFactory
 import de.fhg.aisec.ids.idscp2.idscp_core.rat_registry.RatProverDriverRegistry
 import de.fhg.aisec.ids.idscp2.idscp_core.rat_registry.RatVerifierDriverRegistry
 import de.fhg.aisec.ids.tpm2d.TpmHelper
+import de.fhg.aisec.ids.tpm2d.messages.TpmAttestation
 import de.fhg.aisec.ids.tpm2d.tpm2d_prover.TpmProver
 import de.fhg.aisec.ids.tpm2d.tpm2d_prover.TpmProverConfig
 import de.fhg.aisec.ids.tpm2d.tpm2d_verifier.TpmVerifier
@@ -64,6 +65,7 @@ class Idscp2ServerInitiator : Idscp2EndpointListener<Idscp2Connection> {
                     "1"
                 )
             )
+            .setExpectedAttestationType(TpmAttestation.IdsAttestationType.BASIC)
             .addRootCaCertificates(tpmTrustStore, "password".toCharArray())
             .build()
 

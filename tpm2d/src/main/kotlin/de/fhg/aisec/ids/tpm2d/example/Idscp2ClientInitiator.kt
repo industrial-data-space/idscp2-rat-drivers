@@ -28,6 +28,7 @@ import de.fhg.aisec.ids.idscp2.idscp_core.api.idscp_connection.Idscp2ConnectionI
 import de.fhg.aisec.ids.idscp2.idscp_core.rat_registry.RatProverDriverRegistry
 import de.fhg.aisec.ids.idscp2.idscp_core.rat_registry.RatVerifierDriverRegistry
 import de.fhg.aisec.ids.tpm2d.TpmHelper
+import de.fhg.aisec.ids.tpm2d.messages.TpmAttestation
 import de.fhg.aisec.ids.tpm2d.tpm2d_prover.TpmProver
 import de.fhg.aisec.ids.tpm2d.tpm2d_prover.TpmProverConfig
 import de.fhg.aisec.ids.tpm2d.tpm2d_verifier.TpmVerifier
@@ -66,6 +67,7 @@ class Idscp2ClientInitiator {
                 )
             )
             .addRootCaCertificates(tpmTrustStore, "password".toCharArray())
+            .setExpectedAttestationType(TpmAttestation.IdsAttestationType.ALL)
             .build()
 
         // register rat drivers
