@@ -65,7 +65,7 @@ class Idscp2ServerInitiator : Idscp2EndpointListener<Idscp2Connection> {
                     "1"
                 )
             )
-            .setExpectedAttestationType(TpmAttestation.IdsAttestationType.BASIC)
+            .setExpectedAttestationType(TpmAttestation.IdsAttestationType.ALL)
             .addRootCaCertificates(tpmTrustStore, "password".toCharArray())
             .build()
 

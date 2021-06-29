@@ -112,12 +112,12 @@ class PcrValues(private val size: Int) {
     }
 
     override fun toString(): String {
-        var s = "PCR {"
+        var s = "PCR {\n"
         for (i in 0 until size) {
             val value = this.pcrValues[i].value
             val valueStr = value.contentToString()
-            s += "\tpcr_'$i': $valueStr,"
+            s += "\tpcr_'$i': $valueStr,\n"
         }
-        return "$s}"
+        return "$s}\n"
     }
 }

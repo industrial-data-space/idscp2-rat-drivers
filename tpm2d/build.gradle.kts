@@ -35,3 +35,13 @@ dependencies {
     testImplementation("junit", "junit", "4.13.2")
     testImplementation("org.mockito", "mockito-core", "3.8.0")
 }
+
+task("TpmExampleServer", JavaExec::class) {
+    main = "de.fhg.aisec.ids.tpm2d.example.RunIdscp2Server"
+    classpath = sourceSets["main"].runtimeClasspath
+}
+
+task("TpmExampleClient", JavaExec::class) {
+    main = "de.fhg.aisec.ids.tpm2d.example.RunIdscp2Client"
+    classpath = sourceSets["main"].runtimeClasspath
+}

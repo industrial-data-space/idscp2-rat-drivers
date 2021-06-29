@@ -120,10 +120,11 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
         // TPM Challenge-Response Protocol
 
         // create rat challenge with fresh nonce
-        if (LOG.isTraceEnabled) {
-            LOG.trace("Generate and send TPM challenge to remote TPM prover")
+        if (LOG.isDebugEnabled) {
+            LOG.debug("Generate and send TPM challenge to remote TPM prover")
         }
         val nonce = TpmHelper.generateNonce(20)
+        LOG.debug("Challenge nonce is: " + nonce.contentToString())
 
         // send challenge to TPM prover
         val ratChallenge = TpmMessageFactory.getAttestationChallengeMessage(
@@ -132,14 +133,15 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
         fsmListener.onRatVerifierMessage(InternalControlMessage.RAT_VERIFIER_MSG, ratChallenge)
 
         // wait for attestation response
+        LOG.debug("Wait for RAT prover message with TPM attestation response")
         val ratProverMsg = waitForProverMsg()
 
         // check if wrapper contains expected rat response
         if (!ratProverMsg.hasRatResponse()) {
             fsmListener.onRatVerifierMessage(InternalControlMessage.RAT_VERIFIER_FAILED)
             throw TpmException("Missing TPM challenge response")
-        } else if (LOG.isTraceEnabled) {
-            LOG.trace("Got TPM challenge response. Start validation ...")
+        } else if (LOG.isDebugEnabled) {
+            LOG.debug("Got TPM challenge response. Start validation ...")
         }
 
         val resp = ratProverMsg.ratResponse
@@ -161,8 +163,8 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
         }
 
         // notify fsm about success
-        if (LOG.isTraceEnabled) {
-            LOG.trace("TPM verification succeed")
+        if (LOG.isDebugEnabled) {
+            LOG.debug("TPM verification succeed")
         }
         sendRatResult(true)
     }
@@ -170,16 +172,16 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
     private fun checkPcrValues(response: TpmResponse): Boolean {
 
         try {
-            // parse golden values from DAT
-            val goldenValues = PcrValues.parse(fsmListener.remotePeerDat)
-            if (LOG.isDebugEnabled) {
-                LOG.debug("Golden values: $goldenValues")
-            }
-
             // parse pcr from response
             val pcrValues = PcrValues.parse(response.pcrValuesList)
             if (LOG.isDebugEnabled) {
-                LOG.debug("Peer PCR values: $pcrValues")
+                LOG.debug("Peer PCR values from TPM response: $pcrValues")
+            }
+
+            // parse golden values from DAT
+            val goldenValues = PcrValues.parse(fsmListener.remotePeerDat)
+            if (LOG.isDebugEnabled) {
+                LOG.debug("Golden values from DAPS: $goldenValues")
             }
 
             return pcrValues.isTrusted(goldenValues, config.expectedAType, config.expectedAttestationMask)
@@ -312,7 +314,7 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
     }
 
     companion object {
-        const val ID = "TPM2D"
+        const val ID = "TPM"
         private val LOG = LoggerFactory.getLogger(TpmVerifier::class.java)
     }
 }
