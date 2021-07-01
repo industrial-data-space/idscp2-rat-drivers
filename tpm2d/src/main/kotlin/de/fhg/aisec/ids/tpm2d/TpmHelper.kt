@@ -20,12 +20,14 @@
 package de.fhg.aisec.ids.tpm2d
 
 import org.slf4j.LoggerFactory
+import java.io.FileInputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.KeyStore
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.security.cert.Certificate
+import java.security.cert.CertificateFactory
 import java.security.cert.PKIXParameters
 import java.security.cert.X509Certificate
 import java.util.stream.Collectors
@@ -116,5 +118,11 @@ object TpmHelper {
         // Probe key alias
         ks.getKey(keyAlias, keyStorePassword)
         return cert
+    }
+
+    fun loadCertificateFromPem(path: Path): X509Certificate {
+        val factory = CertificateFactory.getInstance("X.509")
+        val ins = FileInputStream(path.toFile())
+        return factory.generateCertificate(ins) as X509Certificate
     }
 }

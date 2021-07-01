@@ -58,6 +58,13 @@ class Idscp2ServerInitiator : Idscp2EndpointListener<Idscp2Connection> {
             ).path
         )
 
+        val caCert = Paths.get(
+            Objects.requireNonNull(
+                RunIdscp2Client::class.java.classLoader
+                    .getResource("tpm/tpm_test_root_cert.pem")
+            ).path
+        )
+
         val verifierConfig = TpmVerifierConfig.Builder()
             .setLocalCertificate(
                 TpmHelper.loadCertificate(
@@ -66,6 +73,7 @@ class Idscp2ServerInitiator : Idscp2EndpointListener<Idscp2Connection> {
                 )
             )
             .setExpectedAttestationType(TpmAttestation.IdsAttestationType.ALL)
+            .addRootCaCertificate(TpmHelper.loadCertificateFromPem(caCert))
             .addRootCaCertificates(tpmTrustStore, "password".toCharArray())
             .build()
 
