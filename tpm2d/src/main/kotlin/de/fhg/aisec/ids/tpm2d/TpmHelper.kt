@@ -95,20 +95,24 @@ object TpmHelper {
 
     /**
      * Load all certificates from trust store
+     *
+     * Keys are not required to be in the truststore. Used for loading multiple root ca certs
      */
-    fun loadCertificates(keyStorePath: Path, keyStorePassword: CharArray): List<X509Certificate> {
+    fun loadCertificatesFromTruststore(trustStorePath: Path, trustStorePassword: CharArray): List<X509Certificate> {
         val ks: KeyStore = KeyStore.getInstance("PKCS12")
-        Files.newInputStream(keyStorePath).use { keyStoreInputStream ->
-            ks.load(keyStoreInputStream, keyStorePassword)
+        Files.newInputStream(trustStorePath).use { keyStoreInputStream ->
+            ks.load(keyStoreInputStream, trustStorePassword)
         }
         val trustAnchors = PKIXParameters(ks).trustAnchors
         return trustAnchors.stream().map { it.trustedCert }.collect(Collectors.toList())
     }
 
     /**
-     * Load a specific certificate from key store
+     * Load a specific X.509 certificate from key store
+     *
+     * This requires that the private key is also in the keystore
      */
-    fun loadCertificate(keyStorePath: Path, keyStorePassword: CharArray, keyAlias: String): X509Certificate {
+    fun loadCertificateFromKeystore(keyStorePath: Path, keyStorePassword: CharArray, keyAlias: String): X509Certificate {
         val ks = KeyStore.getInstance("PKCS12")
         Files.newInputStream(keyStorePath).use { keyStoreInputStream ->
             ks.load(keyStoreInputStream, keyStorePassword)
@@ -120,6 +124,9 @@ object TpmHelper {
         return cert
     }
 
+    /**
+     * Load a X.509 certificate from pem file
+     */
     fun loadCertificateFromPem(path: Path): X509Certificate {
         val factory = CertificateFactory.getInstance("X.509")
         val ins = FileInputStream(path.toFile())

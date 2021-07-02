@@ -111,11 +111,15 @@ class PcrValues(private val size: Int) {
         }
     }
 
+    private fun ByteArray.toHexString(): String = joinToString(separator = ", ", postfix = "]", prefix = "[") {
+            eachByte -> "0x%02x".format(eachByte)
+    }
+
     override fun toString(): String {
         var s = "PCR {\n"
         for (i in 0 until size) {
             val value = this.pcrValues[i].value
-            val valueStr = value.contentToString()
+            val valueStr = value.toHexString()
             s += "\tpcr_'$i': $valueStr,\n"
         }
         return "$s}\n"

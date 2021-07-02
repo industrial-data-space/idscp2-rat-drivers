@@ -18,12 +18,26 @@ fun addRootCaCertificates(truststore: Path, trustStorePwd: CharArray): Builder
 // add a single root ca cert, used for verifying TPM cert
 fun addRootCaCertificate(cert: X509Certificate): Builder
 
+// add a single root ca cert from pem file, used for verifying TPM cert
+fun addRootCaCertificateFromPem(certPath: Path): Builder
+
 // set the attestation type: BASIC, ADVANCED or ALL
 fun setExpectedAttestationType(aType: IdsAttestationType): Builder
 
 fun setExpectedAttestationMask(mask: Int): Builder
 
 fun build(): TpmVerifierConfig
+```
+
+The provers TPM certificate has to be sign by a CA certificate. Since the verifier configuration
+is per connector, multiple root CA certificate might be available to verify certificates
+of multiple other connectors. For this purpose, all the root CA certs can be added to the config individually
+using the *addRootCaCertificate* or *addRootCaCertificateFromPem* or all the root CA certs can be collected
+into a single pkcs12 truststore. To add a certificate into a truststore, use *keytool*:
+
+```
+keytool -importcert -storetype PKCS12 -keystore $TPM-truststore.p12 \
+  -storepass $TRUSTSTORE_PASSWORD -alias $CA_ALIAS -file $CA_CERT.pem -noprompt
 ```
 
 ### TPM prover

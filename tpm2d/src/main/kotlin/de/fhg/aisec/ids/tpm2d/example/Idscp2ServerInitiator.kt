@@ -67,13 +67,13 @@ class Idscp2ServerInitiator : Idscp2EndpointListener<Idscp2Connection> {
 
         val verifierConfig = TpmVerifierConfig.Builder()
             .setLocalCertificate(
-                TpmHelper.loadCertificate(
+                TpmHelper.loadCertificateFromKeystore(
                     nativeTlsConfiguration.keyStorePath, nativeTlsConfiguration.keyStorePassword,
                     "1"
                 )
             )
             .setExpectedAttestationType(TpmAttestation.IdsAttestationType.ALL)
-            .addRootCaCertificate(TpmHelper.loadCertificateFromPem(caCert))
+            .addRootCaCertificateFromPem(caCert)
             .addRootCaCertificates(tpmTrustStore, "password".toCharArray())
             .build()
 

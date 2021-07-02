@@ -50,12 +50,17 @@ class TpmVerifierConfig private constructor() {
         }
 
         fun addRootCaCertificates(truststore: Path, trustStorePwd: CharArray): Builder {
-            config.caCertificatesMutable.addAll(TpmHelper.loadCertificates(truststore, trustStorePwd))
+            config.caCertificatesMutable.addAll(TpmHelper.loadCertificatesFromTruststore(truststore, trustStorePwd))
             return this
         }
 
         fun addRootCaCertificate(cert: X509Certificate): Builder {
             config.caCertificatesMutable.add(cert)
+            return this
+        }
+
+        fun addRootCaCertificateFromPem(certPath: Path): Builder {
+            config.caCertificatesMutable.add(TpmHelper.loadCertificateFromPem(certPath))
             return this
         }
 
