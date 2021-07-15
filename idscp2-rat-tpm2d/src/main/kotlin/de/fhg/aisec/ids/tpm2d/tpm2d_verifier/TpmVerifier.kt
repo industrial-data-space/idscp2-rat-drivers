@@ -235,7 +235,7 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
 
             // Construct a new TPMT_SIGNATURE instance from byteSignature bytes
             val tpmtSignature: TPMT_SIGNATURE = try {
-                TPMT_SIGNATURE.fromTpm(byteSignature)
+                TPMT_SIGNATURE.fromBytes(byteSignature)
             } catch (ex: Exception) {
                 LOG.warn(
                     """
@@ -249,7 +249,7 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
 
             // Construct a new TPMS_ATTEST instance from byteQuoted bytes
             val tpmsAttest: TPMS_ATTEST = try {
-                TPMS_ATTEST.fromTpm(byteQuoted)
+                TPMS_ATTEST.fromBytes(byteQuoted)
             } catch (ex: Exception) {
                 LOG.warn(
                     """
@@ -278,15 +278,15 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
             }
 
             // Check signature of attestation
-            val tpmSigAlg = tpmtSignature.GetUnionSelector_signature()
+            val tpmSigAlg = tpmtSignature.sigAlg()
             val tpmSigHashAlg: Int
             val tpmSig: ByteArray
             when (tpmSigAlg) {
-                TPM_ALG_ID.RSAPSS.toInt() -> {
+                TPM_ALG_ID.RSAPSS -> {
                     tpmSigHashAlg = (tpmtSignature.signature as TPMS_SIGNATURE_RSAPSS).hash.toInt()
                     tpmSig = (tpmtSignature.signature as TPMS_SIGNATURE_RSAPSS).sig
                 }
-                TPM_ALG_ID.RSASSA.toInt() -> {
+                TPM_ALG_ID.RSASSA -> {
                     tpmSigHashAlg = (tpmtSignature.signature as TPMS_SIGNATURE_RSASSA).hash.toInt()
                     tpmSig = (tpmtSignature.signature as TPMS_SIGNATURE_RSASSA).sig
                 }

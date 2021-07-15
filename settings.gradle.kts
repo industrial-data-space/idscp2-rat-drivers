@@ -1,3 +1,3 @@
 rootProject.name = "idscp2-rat-drivers"
 
-include("tpm2d")
+include("idscp2-rat-tpm2d")

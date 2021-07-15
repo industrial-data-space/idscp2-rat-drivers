@@ -53,7 +53,7 @@ object RunIdscp2Server {
         val localAttestationConfig = AttestationConfig.Builder()
             .setSupportedRatSuite(arrayOf(TpmProver.ID))
             .setExpectedRatSuite(arrayOf(TpmVerifier.ID))
-            .setRatTimeoutDelay(300 * 1000) // 300 seconds
+            .setRatTimeoutDelay(300 * 1000L) // 300 seconds
             .build()
 
         // create daps config

@@ -68,8 +68,8 @@ class IntegrationTest {
             try {
                 while (true) {
                     val client = tpmSocket.accept()
-                    val ins: DataInputStream = DataInputStream(client.inputStream)
-                    val outs: DataOutputStream = DataOutputStream(client.outputStream)
+                    val ins = DataInputStream(client.inputStream)
+                    val outs = DataOutputStream(client.outputStream)
 
                     val requestBytes = ByteArray(ins.readInt())
                     ins.readFully(requestBytes)

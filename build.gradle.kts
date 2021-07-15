@@ -3,11 +3,17 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     java
-    id("com.google.protobuf") version "0.8.15"
-    id("org.jetbrains.kotlin.jvm") version "1.4.31"
+    signing
+    `maven-publish`
+    id("com.google.protobuf") version "0.8.16"
+    id("org.jetbrains.kotlin.jvm") version "1.5.20"
     id("com.diffplug.spotless") version "5.11.0"
     id("com.github.jk1.dependency-license-report") version "1.16"
 }
+
+val descriptions: Map < String, String > = mapOf(
+    "idscp2-rat-tpm2d" to "IDSCP2 TPM 2.0 Remote Attestation Driver",
+)
 
 allprojects {
     group = "de.fhg.aisec.ids"
@@ -52,8 +58,8 @@ subprojects {
     dependencies {
         // Logging API
         api("org.slf4j", "slf4j-simple", "1.7.30")
-        api("de.fhg.aisec.ids", "idscp2", "0.4.0")
-        api("org.jetbrains.kotlin", "kotlin-stdlib-jdk8", "1.4.31")
+        api("de.fhg.aisec.ids", "idscp2", "0.5.0")
+        api("org.jetbrains.kotlin", "kotlin-stdlib-jdk8", "1.5.20")
     }
 
     tasks.withType<KotlinCompile> {
@@ -75,6 +81,64 @@ subprojects {
                 "-noee" to true
             )
         }
+    }
+
+    apply(plugin = "maven-publish")
+    apply(plugin = "signing")
+
+    publishing {
+        publications {
+            register("idscp2Library", MavenPublication::class) {
+                from(components["java"])
+                pom {
+                    name.set(project.name)
+                    description.set(descriptions[project.name])
+                    url.set("https://github.com/industrial-data-space/idscp2-rat-drivers")
+                    licenses {
+                        license {
+                            name.set("The Apache License, Version 2.0")
+                            url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                        }
+                    }
+                    developers {
+                        developer {
+                            name.set("Michael Lux")
+                            email.set("michael.lux@aisec.fraunhofer.de")
+                            organization.set("Fraunhofer AISEC")
+                            organizationUrl.set("aisec.fraunhofer.de")
+                        }
+                    }
+                    scm {
+                        connection.set("scm:git:git://github.com:industrial-data-space/idscp2-rat-drivers.git")
+                        developerConnection.set("scm:git:ssh://github.com:industrial-data-space/idscp2-rat-drivers.git")
+                        url.set("https://github.com/industrial-data-space/idscp2-rat-drivers")
+                    }
+                }
+            }
+        }
+
+        repositories {
+            // mavenLocal()
+            maven {
+                url = uri(
+                    if (version.toString().endsWith("SNAPSHOT")) {
+                        "https://oss.sonatype.org/content/repositories/snapshots"
+                    } else {
+                        "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+                    }
+                )
+
+                credentials {
+                    username = project.findProperty("deployUsername") as? String
+                    password = project.findProperty("deployPassword") as? String
+                }
+            }
+        }
+    }
+
+    signing {
+        useGpgCmd()
+        sign(publishing.publications.getByName("idscp2Library"))
     }
 
     apply(plugin = "com.github.jk1.dependency-license-report")

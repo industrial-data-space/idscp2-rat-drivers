@@ -112,7 +112,8 @@ class PcrValues(private val size: Int) {
     }
 
     private fun ByteArray.toHexString(): String = joinToString(separator = ", ", postfix = "]", prefix = "[") {
-            eachByte -> "0x%02x".format(eachByte)
+        eachByte ->
+        "0x%02x".format(eachByte)
     }
 
     override fun toString(): String {
