@@ -75,7 +75,9 @@ class Idscp2ClientInitiator {
             )
             .addRootCaCertificates(tpmTrustStore, "password".toCharArray())
             .addRootCaCertificateFromPem(caCert)
-            .setExpectedAttestationType(TpmAttestation.IdsAttestationType.ALL)
+//            .setExpectedAttestationType(TpmAttestation.IdsAttestationType.ALL)
+            .setExpectedAttestationType(TpmAttestation.IdsAttestationType.ADVANCED)
+            .setExpectedAttestationMask(0x0603ff) // DRTM config
             .build()
 
         // register rat drivers

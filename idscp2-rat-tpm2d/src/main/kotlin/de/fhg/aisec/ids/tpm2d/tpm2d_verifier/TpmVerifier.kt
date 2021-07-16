@@ -118,55 +118,59 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
      */
     override fun run() {
         // TPM Challenge-Response Protocol
+        try {
+            // create rat challenge with fresh nonce
+            if (LOG.isDebugEnabled) {
+                LOG.debug("Generate and send TPM challenge to remote TPM prover")
+            }
+            val nonce = TpmHelper.generateNonce(20)
+            LOG.debug("Challenge nonce is: " + nonce.contentToString())
 
-        // create rat challenge with fresh nonce
-        if (LOG.isDebugEnabled) {
-            LOG.debug("Generate and send TPM challenge to remote TPM prover")
+            // send challenge to TPM prover
+            val ratChallenge = TpmMessageFactory.getAttestationChallengeMessage(
+                nonce, config.expectedAType, config.expectedAttestationMask
+            ).toByteArray()
+            fsmListener.onRatVerifierMessage(InternalControlMessage.RAT_VERIFIER_MSG, ratChallenge)
+
+            // wait for attestation response
+            LOG.debug("Wait for RAT prover message with TPM attestation response")
+            val ratProverMsg = waitForProverMsg()
+
+            // check if wrapper contains expected rat response
+            if (!ratProverMsg.hasRatResponse()) {
+                fsmListener.onRatVerifierMessage(InternalControlMessage.RAT_VERIFIER_FAILED)
+                throw TpmException("Missing TPM challenge response")
+            } else if (LOG.isDebugEnabled) {
+                LOG.debug("Got TPM challenge response. Start validation ...")
+            }
+
+            val resp = ratProverMsg.ratResponse
+
+            // validate signature
+            if (!checkSignature(resp, TpmHelper.calculateHash(nonce, config.localCertificate))) {
+                sendRatResult(false)
+                throw TpmException("Invalid TPM signature")
+            } else if (LOG.isDebugEnabled) {
+                LOG.debug("TPM signature valid and certificate trusted")
+            }
+
+            // validate pcr values
+            if (!checkPcrValues(resp)) {
+                sendRatResult(false)
+                throw TpmException("Mismatch between PCR values and golden values")
+            } else if (LOG.isDebugEnabled) {
+                LOG.debug("PCR values trusted")
+            }
+
+            // notify fsm about success
+            if (LOG.isDebugEnabled) {
+                LOG.debug("TPM verification succeed")
+            }
+            sendRatResult(true)
+        } catch (t: Throwable) {
+            LOG.error("Error in TPM Verifier", t)
+            throw t
         }
-        val nonce = TpmHelper.generateNonce(20)
-        LOG.debug("Challenge nonce is: " + nonce.contentToString())
-
-        // send challenge to TPM prover
-        val ratChallenge = TpmMessageFactory.getAttestationChallengeMessage(
-            nonce, config.expectedAType, config.expectedAttestationMask
-        ).toByteArray()
-        fsmListener.onRatVerifierMessage(InternalControlMessage.RAT_VERIFIER_MSG, ratChallenge)
-
-        // wait for attestation response
-        LOG.debug("Wait for RAT prover message with TPM attestation response")
-        val ratProverMsg = waitForProverMsg()
-
-        // check if wrapper contains expected rat response
-        if (!ratProverMsg.hasRatResponse()) {
-            fsmListener.onRatVerifierMessage(InternalControlMessage.RAT_VERIFIER_FAILED)
-            throw TpmException("Missing TPM challenge response")
-        } else if (LOG.isDebugEnabled) {
-            LOG.debug("Got TPM challenge response. Start validation ...")
-        }
-
-        val resp = ratProverMsg.ratResponse
-
-        // validate signature
-        if (!checkSignature(resp, TpmHelper.calculateHash(nonce, config.localCertificate))) {
-            sendRatResult(false)
-            throw TpmException("Invalid TPM signature")
-        } else if (LOG.isDebugEnabled) {
-            LOG.debug("TPM signature valid and certificate trusted")
-        }
-
-        // validate pcr values
-        if (!checkPcrValues(resp)) {
-            sendRatResult(false)
-            throw TpmException("Mismatch between pcr values and golden values")
-        } else if (LOG.isDebugEnabled) {
-            LOG.debug("PCR values trusted")
-        }
-
-        // notify fsm about success
-        if (LOG.isDebugEnabled) {
-            LOG.debug("TPM verification succeed")
-        }
-        sendRatResult(true)
     }
 
     private fun checkPcrValues(response: TpmResponse): Boolean {
@@ -174,14 +178,14 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
         try {
             // parse pcr from response
             val pcrValues = PcrValues.parse(response.pcrValuesList)
-            if (LOG.isDebugEnabled) {
-                LOG.debug("Peer PCR values from TPM response: $pcrValues")
+            if (LOG.isTraceEnabled) {
+                LOG.trace("Peer PCR values from TPM response: $pcrValues")
             }
 
             // parse golden values from DAT
             val goldenValues = PcrValues.parse(fsmListener.remotePeerDat)
-            if (LOG.isDebugEnabled) {
-                LOG.debug("Golden values from DAPS: $goldenValues")
+            if (LOG.isTraceEnabled) {
+                LOG.trace("Golden values from DAPS: $goldenValues")
             }
 
             return pcrValues.isTrusted(goldenValues, config.expectedAType, config.expectedAttestationMask)

@@ -33,7 +33,6 @@ import java.util.Collections
 class TpmVerifierConfig private constructor() {
     lateinit var localCertificate: X509Certificate
         private set
-    private var caCertificatesMutable = mutableListOf<X509Certificate>()
     lateinit var caCertificates: List<X509Certificate>
         private set
     var expectedAType = IdsAttestationType.BASIC
@@ -43,6 +42,7 @@ class TpmVerifierConfig private constructor() {
 
     class Builder {
         private val config = TpmVerifierConfig()
+        private val caCertificates = mutableListOf<X509Certificate>()
 
         fun setLocalCertificate(localCert: X509Certificate): Builder {
             config.localCertificate = localCert
@@ -50,17 +50,17 @@ class TpmVerifierConfig private constructor() {
         }
 
         fun addRootCaCertificates(truststore: Path, trustStorePwd: CharArray): Builder {
-            config.caCertificatesMutable.addAll(TpmHelper.loadCertificatesFromTruststore(truststore, trustStorePwd))
+            caCertificates.addAll(TpmHelper.loadCertificatesFromTruststore(truststore, trustStorePwd))
             return this
         }
 
         fun addRootCaCertificate(cert: X509Certificate): Builder {
-            config.caCertificatesMutable.add(cert)
+            caCertificates.add(cert)
             return this
         }
 
         fun addRootCaCertificateFromPem(certPath: Path): Builder {
-            config.caCertificatesMutable.add(TpmHelper.loadCertificateFromPem(certPath))
+            caCertificates.add(TpmHelper.loadCertificateFromPem(certPath))
             return this
         }
 
@@ -75,7 +75,7 @@ class TpmVerifierConfig private constructor() {
         }
 
         fun build(): TpmVerifierConfig {
-            config.caCertificates = Collections.unmodifiableList(config.caCertificatesMutable)
+            config.caCertificates = Collections.unmodifiableList(caCertificates)
             return config
         }
     }

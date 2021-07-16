@@ -72,9 +72,11 @@ class Idscp2ServerInitiator : Idscp2EndpointListener<Idscp2Connection> {
                     "1"
                 )
             )
-            .setExpectedAttestationType(TpmAttestation.IdsAttestationType.ALL)
-            .addRootCaCertificateFromPem(caCert)
             .addRootCaCertificates(tpmTrustStore, "password".toCharArray())
+            .addRootCaCertificateFromPem(caCert)
+//            .setExpectedAttestationType(TpmAttestation.IdsAttestationType.ALL)
+            .setExpectedAttestationType(TpmAttestation.IdsAttestationType.ADVANCED)
+            .setExpectedAttestationMask(0x0603ff) // SRTM config
             .build()
 
         // register rat drivers

@@ -19,10 +19,12 @@
  */
 package de.fhg.aisec.ids.tpm2d.tpm2d_verifier
 
+import de.fhg.aisec.ids.tpm2d.TpmHelper
 import de.fhg.aisec.ids.tpm2d.messages.TpmAttestation
 import de.fhg.aisec.ids.tpm2d.messages.TpmAttestation.IdsAttestationType
 import org.jose4j.base64url.Base64
 import org.jose4j.jwt.consumer.JwtConsumerBuilder
+import org.slf4j.LoggerFactory
 import java.nio.charset.StandardCharsets
 import kotlin.IllegalArgumentException
 
@@ -48,9 +50,9 @@ class PcrValues(private val size: Int) {
             IdsAttestationType.ALL -> 24
             IdsAttestationType.ADVANCED -> {
                 if (mask < 1) {
-                    throw IllegalArgumentException("Requested advanced PCR comparison with invalid psr mask")
+                    throw IllegalArgumentException("Requested advanced PCR comparison with invalid PCR mask")
                 }
-                mask
+                mask.toBigInteger().bitLength()
             }
         }
 
@@ -59,15 +61,25 @@ class PcrValues(private val size: Int) {
         }
 
         // compare all relevant pcr values
-        for (i in 0 until count) {
-            if (!pcrValues[i].isTrusted(goldenValues.pcrValues[i])) {
-                return false
+        if (aType == IdsAttestationType.ADVANCED) {
+            val biMask = mask.toBigInteger()
+            for (i in 0 until count) {
+                if (biMask.testBit(i) && !pcrValues[i].isTrusted(goldenValues.pcrValues[i])) {
+                    return false
+                }
+            }
+        } else {
+            for (i in 0 until count) {
+                if (!pcrValues[i].isTrusted(goldenValues.pcrValues[i])) {
+                    return false
+                }
             }
         }
         return true
     }
 
     companion object {
+        private val LOG = LoggerFactory.getLogger(TpmHelper::class.java)
 
         fun parse(pcrValues: List<TpmAttestation.Pcr>): PcrValues {
 
