@@ -1,6 +1,6 @@
 /*-
  * ========================LICENSE_START=================================
- * tpm2d
+ * idscp2-rat-tpm2d
  * %%
  * Copyright (C) 2021 Fraunhofer AISEC
  * %%
@@ -19,14 +19,11 @@
  */
 package de.fhg.aisec.ids.tpm2d.tpm2d_verifier
 
-import de.fhg.aisec.ids.tpm2d.TpmHelper
 import de.fhg.aisec.ids.tpm2d.messages.TpmAttestation
 import de.fhg.aisec.ids.tpm2d.messages.TpmAttestation.IdsAttestationType
 import org.jose4j.base64url.Base64
 import org.jose4j.jwt.consumer.JwtConsumerBuilder
-import org.slf4j.LoggerFactory
 import java.nio.charset.StandardCharsets
-import kotlin.IllegalArgumentException
 
 class PcrValues(private val size: Int) {
 
@@ -57,7 +54,7 @@ class PcrValues(private val size: Int) {
         }
 
         if (size < count) {
-            throw IllegalArgumentException("Number of expected PCRs is larger than the number of available PCRs")
+            throw IllegalArgumentException("Expected $count PCR values, but only $size values are available.")
         }
 
         // compare all relevant pcr values
@@ -79,8 +76,6 @@ class PcrValues(private val size: Int) {
     }
 
     companion object {
-        private val LOG = LoggerFactory.getLogger(TpmHelper::class.java)
-
         fun parse(pcrValues: List<TpmAttestation.Pcr>): PcrValues {
 
             if (pcrValues.size > 24) {

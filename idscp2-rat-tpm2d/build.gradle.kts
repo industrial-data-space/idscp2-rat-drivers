@@ -1,8 +1,6 @@
 import com.google.protobuf.gradle.protobuf
 import org.gradle.plugins.ide.idea.model.IdeaModel
 
-version = "0.1.1"
-
 apply(plugin = "java")
 apply(plugin = "com.google.protobuf")
 apply(plugin = "idea")
@@ -36,14 +34,4 @@ dependencies {
     testImplementation("org.awaitility", "awaitility-kotlin", "4.0.3")
     testImplementation("junit", "junit", "4.13.2")
     testImplementation("org.mockito", "mockito-core", "3.8.0")
-}
-
-task("TpmExampleServer", JavaExec::class) {
-    mainClass.set("de.fhg.aisec.ids.tpm2d.example.RunIdscp2Server")
-    classpath = sourceSets["main"].runtimeClasspath
-}
-
-task("TpmExampleClient", JavaExec::class) {
-    mainClass.set("de.fhg.aisec.ids.tpm2d.example.RunIdscp2Client")
-    classpath = sourceSets["main"].runtimeClasspath
 }

@@ -17,6 +17,7 @@ val descriptions: Map < String, String > = mapOf(
 
 allprojects {
     group = "de.fhg.aisec.ids"
+    version = "0.1.2"
 
     repositories {
         mavenCentral()
@@ -57,7 +58,7 @@ subprojects {
 
     dependencies {
         // Logging API
-        api("org.slf4j", "slf4j-simple", "1.7.30")
+        api("org.slf4j", "slf4j-api", "1.7.30")
         api("de.fhg.aisec.ids", "idscp2", "0.5.0")
         api("org.jetbrains.kotlin", "kotlin-stdlib-jdk8", "1.5.20")
     }
@@ -83,62 +84,64 @@ subprojects {
         }
     }
 
-    apply(plugin = "maven-publish")
-    apply(plugin = "signing")
+    if (project.name in descriptions.keys) {
+        apply(plugin = "maven-publish")
+        apply(plugin = "signing")
 
-    publishing {
-        publications {
-            register("idscp2Library", MavenPublication::class) {
-                from(components["java"])
-                pom {
-                    name.set(project.name)
-                    description.set(descriptions[project.name])
-                    url.set("https://github.com/industrial-data-space/idscp2-rat-drivers")
-                    licenses {
-                        license {
-                            name.set("The Apache License, Version 2.0")
-                            url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
-                        }
-                    }
-                    developers {
-                        developer {
-                            name.set("Michael Lux")
-                            email.set("michael.lux@aisec.fraunhofer.de")
-                            organization.set("Fraunhofer AISEC")
-                            organizationUrl.set("aisec.fraunhofer.de")
-                        }
-                    }
-                    scm {
-                        connection.set("scm:git:git://github.com:industrial-data-space/idscp2-rat-drivers.git")
-                        developerConnection.set("scm:git:ssh://github.com:industrial-data-space/idscp2-rat-drivers.git")
+        publishing {
+            publications {
+                register("idscp2Library", MavenPublication::class) {
+                    from(components["java"])
+                    pom {
+                        name.set(project.name)
+                        description.set(descriptions[project.name])
                         url.set("https://github.com/industrial-data-space/idscp2-rat-drivers")
+                        licenses {
+                            license {
+                                name.set("The Apache License, Version 2.0")
+                                url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                            }
+                        }
+                        developers {
+                            developer {
+                                name.set("Michael Lux")
+                                email.set("michael.lux@aisec.fraunhofer.de")
+                                organization.set("Fraunhofer AISEC")
+                                organizationUrl.set("aisec.fraunhofer.de")
+                            }
+                        }
+                        scm {
+                            connection.set("scm:git:git://github.com:industrial-data-space/idscp2-rat-drivers.git")
+                            developerConnection.set("scm:git:ssh://github.com:industrial-data-space/idscp2-rat-drivers.git")
+                            url.set("https://github.com/industrial-data-space/idscp2-rat-drivers")
+                        }
+                    }
+                }
+            }
+
+            repositories {
+                // mavenLocal()
+                maven {
+                    url = uri(
+                        if (version.toString().endsWith("SNAPSHOT")) {
+                            "https://oss.sonatype.org/content/repositories/snapshots"
+                        } else {
+                            "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+                        }
+                    )
+
+                    credentials {
+                        username = project.findProperty("deployUsername") as? String
+                        password = project.findProperty("deployPassword") as? String
                     }
                 }
             }
         }
 
-        repositories {
-            // mavenLocal()
-            maven {
-                url = uri(
-                    if (version.toString().endsWith("SNAPSHOT")) {
-                        "https://oss.sonatype.org/content/repositories/snapshots"
-                    } else {
-                        "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-                    }
-                )
-
-                credentials {
-                    username = project.findProperty("deployUsername") as? String
-                    password = project.findProperty("deployPassword") as? String
-                }
-            }
+        signing {
+            useGpgCmd()
+            sign(publishing.publications.getByName("idscp2Library"))
         }
-    }
-
-    signing {
-        useGpgCmd()
-        sign(publishing.publications.getByName("idscp2Library"))
     }
 
     apply(plugin = "com.github.jk1.dependency-license-report")
