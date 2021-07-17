@@ -49,7 +49,7 @@ class PcrValues(private val size: Int) {
                 if (mask < 1) {
                     throw IllegalArgumentException("Requested advanced PCR comparison with invalid PCR mask")
                 }
-                mask.toBigInteger().bitLength()
+                mask.countOneBits()
             }
         }
 
@@ -60,8 +60,9 @@ class PcrValues(private val size: Int) {
         // compare all relevant pcr values
         if (aType == IdsAttestationType.ADVANCED) {
             val biMask = mask.toBigInteger()
+            var j = 0
             for (i in 0 until count) {
-                if (biMask.testBit(i) && !pcrValues[i].isTrusted(goldenValues.pcrValues[i])) {
+                if (biMask.testBit(i) && !pcrValues[j++].isTrusted(goldenValues.pcrValues[i])) {
                     return false
                 }
             }
