@@ -77,9 +77,9 @@ class Idscp2ServerInitiator : Idscp2EndpointListener<Idscp2Connection> {
             )
             .addRootCaCertificates(tpmTrustStore, "password".toCharArray())
             .addRootCaCertificateFromPem(caCert)
-            .setExpectedAttestationType(TpmAttestation.IdsAttestationType.ALL)
-//            .setExpectedAttestationType(TpmAttestation.IdsAttestationType.ADVANCED)
-//            .setExpectedAttestationMask(0x0603ff)
+            // .setExpectedAttestationType(TpmAttestation.IdsAttestationType.ALL)
+            .setExpectedAttestationType(TpmAttestation.IdsAttestationType.ADVANCED)
+            .setExpectedAttestationMask(0x0603ff)
             .build()
         RatVerifierDriverRegistry.registerDriver(
             TpmVerifier.ID, ::TpmVerifier, verifierConfig
