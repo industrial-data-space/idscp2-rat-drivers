@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,11 +29,13 @@ import de.fhg.aisec.ids.tpm2d.messages.TpmAttestation.TpmMessage
 import de.fhg.aisec.ids.tpm2d.messages.TpmAttestation.TpmResponse
 import org.slf4j.LoggerFactory
 import tss.tpm.TPMS_ATTEST
+import tss.tpm.TPMS_QUOTE_INFO
 import tss.tpm.TPMS_SIGNATURE_RSAPSS
 import tss.tpm.TPMS_SIGNATURE_RSASSA
 import tss.tpm.TPMT_SIGNATURE
 import tss.tpm.TPM_ALG_ID
 import java.io.ByteArrayInputStream
+import java.security.MessageDigest
 import java.security.Signature
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
@@ -178,14 +180,14 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
         try {
             // parse pcr from response
             val pcrValues = PcrValues.parse(response.pcrValuesList)
-            if (LOG.isTraceEnabled) {
-                LOG.trace("Peer PCR values from TPM response: $pcrValues")
+            if (LOG.isDebugEnabled) {
+                LOG.debug("Peer PCR values from TPM response: $pcrValues")
             }
 
             // parse golden values from DAT
             val goldenValues = PcrValues.parse(fsmListener.remotePeerDat)
-            if (LOG.isTraceEnabled) {
-                LOG.trace("Golden values from DAPS: $goldenValues")
+            if (LOG.isDebugEnabled) {
+                LOG.debug("Golden values from DAPS: $goldenValues")
             }
 
             return pcrValues.isTrusted(goldenValues, config.expectedAType, config.expectedAttestationMask)
@@ -263,6 +265,19 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
                     ex
                 )
                 return false
+            }
+
+            // Check PCR digest against digest of PCR values list
+            val attested = tpmsAttest.attested as TPMS_QUOTE_INFO
+            val digest = MessageDigest.getInstance("SHA-256").apply {
+                response.pcrValuesList.forEach { update(it.toByteArray()) }
+            }.digest()
+            if (!digest.contentEquals(attested.pcrDigest)) {
+                LOG.warn(
+                    "PCR digest {} does not match SHA-256 hash {} over PCR list",
+                    TpmHelper.ByteArrayUtil.toPrintableHexString(attested.pcrDigest),
+                    TpmHelper.ByteArrayUtil.toPrintableHexString(digest)
+                )
             }
 
             // check hash value (extra data) against expected hash

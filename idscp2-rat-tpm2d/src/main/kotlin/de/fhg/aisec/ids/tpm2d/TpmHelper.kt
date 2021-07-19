@@ -69,6 +69,7 @@ object TpmHelper {
 
     internal object ByteArrayUtil {
         private val lookup = arrayOfNulls<String>(256)
+
         fun toPrintableHexString(bytes: ByteArray): String {
             val s = StringBuilder()
             for (i in bytes.indices) {
