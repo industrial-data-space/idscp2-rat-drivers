@@ -67,33 +67,6 @@ object TpmHelper {
         }
     }
 
-    internal object ByteArrayUtil {
-        private val lookup = arrayOfNulls<String>(256)
-
-        fun toPrintableHexString(bytes: ByteArray): String {
-            val s = StringBuilder()
-            for (i in bytes.indices) {
-                if (i > 0 && i % 16 == 0) {
-                    s.append('\n')
-                } else {
-                    s.append(' ')
-                }
-                s.append(lookup[bytes[i].toInt() and 0xff])
-            }
-            return s.toString()
-        }
-
-        init {
-            for (i in lookup.indices) {
-                if (i < 16) {
-                    lookup[i] = "0" + Integer.toHexString(i)
-                } else {
-                    lookup[i] = Integer.toHexString(i)
-                }
-            }
-        }
-    }
-
     /**
      * Load all certificates from trust store
      *

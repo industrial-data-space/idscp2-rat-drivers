@@ -21,22 +21,71 @@ package de.fhg.aisec.ids.tpm2d.tpm2d_verifier
 
 import de.fhg.aisec.ids.tpm2d.messages.TpmAttestation
 import de.fhg.aisec.ids.tpm2d.messages.TpmAttestation.IdsAttestationType
+import de.fhg.aisec.ids.tpm2d.toHexString
 import org.jose4j.base64url.Base64
 import org.jose4j.jwt.consumer.JwtConsumerBuilder
 import java.nio.charset.StandardCharsets
+import java.util.Collections.unmodifiableList
 
-class PcrValues(private val size: Int) {
+class PcrValues {
 
-    // 24 pcr register
-    private val pcrValues = MutableList(size) { PcrEntry() }
+    private val pcrValues: List<PcrEntry>
 
-    class PcrEntry {
+    data class PcrEntry(val number: Int, val value: ByteArray) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
 
-        lateinit var value: ByteArray
+            other as PcrEntry
 
-        fun isTrusted(other: PcrEntry): Boolean {
-            return value.contentEquals(other.value)
+            if (number != other.number) return false
+            if (!value.contentEquals(other.value)) return false
+
+            return true
         }
+
+        override fun hashCode(): Int {
+            var result = number
+            result = 31 * result + value.contentHashCode()
+            return result
+        }
+    }
+
+    constructor(pcrValues: List<TpmAttestation.Pcr>) {
+
+        if (pcrValues.size > 24) {
+            throw IllegalArgumentException("Invalid number of pcr registers in TpmResponse")
+        }
+
+        this.pcrValues = unmodifiableList(
+            pcrValues.map { PcrEntry(it.number, it.value.toByteArray()) }.sortedBy { it.number }
+        )
+    }
+
+    constructor(dat: ByteArray) {
+
+        val jwtConsumer = JwtConsumerBuilder()
+            .setSkipSignatureVerification()
+            .setSkipAllValidators()
+            .build()
+
+        val claims = jwtConsumer.processToClaims(String(dat, StandardCharsets.UTF_8))
+
+        if (!claims.isClaimValueStringList("pcrGoldenValues")) {
+            throw IllegalArgumentException("DAT does not contain golden values")
+        }
+
+        val goldenValueList = claims.getStringListClaimValue("pcrGoldenValues")
+
+        if (goldenValueList.size != 24) {
+            throw IllegalArgumentException("Golden values are not complete")
+        }
+
+        this.pcrValues = unmodifiableList(
+            goldenValueList.mapIndexed { n, v ->
+                PcrEntry(n, Base64.decode(v))
+            }
+        )
     }
 
     fun isTrusted(goldenValues: PcrValues, aType: IdsAttestationType, mask: Int): Boolean {
@@ -53,22 +102,23 @@ class PcrValues(private val size: Int) {
             }
         }
 
-        if (size < count) {
-            throw IllegalArgumentException("Expected $count PCR values, but only $size values are available.")
+        if (this.pcrValues.size < count) {
+            throw IllegalArgumentException(
+                "Expected $count PCR values, but only ${this.pcrValues.size} values are available."
+            )
         }
 
         // compare all relevant pcr values
         if (aType == IdsAttestationType.ADVANCED) {
             val biMask = mask.toBigInteger()
-            var j = 0
-            for (i in 0 until count) {
-                if (biMask.testBit(i) && !pcrValues[j++].isTrusted(goldenValues.pcrValues[i])) {
+            pcrValues.forEach {
+                if (biMask.testBit(it.number) && it != goldenValues.pcrValues[it.number]) {
                     return false
                 }
             }
         } else {
             for (i in 0 until count) {
-                if (!pcrValues[i].isTrusted(goldenValues.pcrValues[i])) {
+                if (pcrValues[i] != goldenValues.pcrValues[i]) {
                     return false
                 }
             }
@@ -76,61 +126,7 @@ class PcrValues(private val size: Int) {
         return true
     }
 
-    companion object {
-        fun parse(pcrValues: List<TpmAttestation.Pcr>): PcrValues {
-
-            if (pcrValues.size > 24) {
-                throw IllegalArgumentException("Invalid number of pcr registers in TpmResponse")
-            }
-
-            val values = PcrValues(pcrValues.size)
-            for (i in pcrValues.indices) {
-                values.pcrValues[i].value = pcrValues[i].value.toByteArray()
-            }
-            return values
-        }
-
-        fun parse(dat: ByteArray): PcrValues {
-
-            val jwtConsumer = JwtConsumerBuilder()
-                .setSkipSignatureVerification()
-                .setSkipAllValidators()
-                .build()
-
-            val claims = jwtConsumer.processToClaims(String(dat, StandardCharsets.UTF_8))
-
-            if (!claims.isClaimValueStringList("pcrGoldenValues")) {
-                throw IllegalArgumentException("DAT does not contain golden values")
-            }
-
-            val goldenValueList = claims.getStringListClaimValue("pcrGoldenValues")
-
-            if (goldenValueList.size != 24) {
-                throw IllegalArgumentException("Golden values are not complete")
-            }
-
-            val values = PcrValues(24)
-            for (i in 0..23) {
-                val bytes = Base64.decode(goldenValueList[i])
-                values.pcrValues[i].value = bytes
-            }
-
-            return values
-        }
-    }
-
-    private fun ByteArray.toHexString(): String = joinToString(separator = ", ", postfix = "]", prefix = "[") {
-        eachByte ->
-        "0x%02x".format(eachByte)
-    }
-
     override fun toString(): String {
-        var s = "PCR {\n"
-        for (i in 0 until size) {
-            val value = this.pcrValues[i].value
-            val valueStr = value.toHexString()
-            s += "\tpcr_'$i': $valueStr,\n"
-        }
-        return "$s}\n"
+        return "PCR {\n" + pcrValues.joinToString("\n") { "pcr_${it.number}: ${it.value.toHexString()}" } + "\n}"
     }
 }

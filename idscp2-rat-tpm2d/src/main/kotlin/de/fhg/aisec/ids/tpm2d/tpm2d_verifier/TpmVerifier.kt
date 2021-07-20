@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,6 +27,7 @@ import de.fhg.aisec.ids.tpm2d.TpmHelper
 import de.fhg.aisec.ids.tpm2d.TpmMessageFactory
 import de.fhg.aisec.ids.tpm2d.messages.TpmAttestation.TpmMessage
 import de.fhg.aisec.ids.tpm2d.messages.TpmAttestation.TpmResponse
+import de.fhg.aisec.ids.tpm2d.toHexString
 import org.slf4j.LoggerFactory
 import tss.tpm.TPMS_ATTEST
 import tss.tpm.TPMS_QUOTE_INFO
@@ -179,13 +180,13 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
 
         try {
             // parse pcr from response
-            val pcrValues = PcrValues.parse(response.pcrValuesList)
+            val pcrValues = PcrValues(response.pcrValuesList)
             if (LOG.isDebugEnabled) {
                 LOG.debug("Peer PCR values from TPM response: $pcrValues")
             }
 
             // parse golden values from DAT
-            val goldenValues = PcrValues.parse(fsmListener.remotePeerDat)
+            val goldenValues = PcrValues(fsmListener.remotePeerDat)
             if (LOG.isDebugEnabled) {
                 LOG.debug("Golden values from DAPS: $goldenValues")
             }
@@ -202,9 +203,9 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
         val byteCert = response.certificate.toByteArray()
         val byteQuoted = response.quoted.toByteArray()
         if (LOG.isTraceEnabled) {
-            LOG.trace("signature: {}", TpmHelper.ByteArrayUtil.toPrintableHexString(byteSignature))
-            LOG.trace("cert: {}", TpmHelper.ByteArrayUtil.toPrintableHexString(byteCert))
-            LOG.trace("quoted: {}", TpmHelper.ByteArrayUtil.toPrintableHexString(byteQuoted))
+            LOG.trace("signature: {}", byteSignature.toHexString())
+            LOG.trace("cert: {}", byteCert.toHexString())
+            LOG.trace("quoted: {}", byteQuoted.toHexString())
         }
         if (byteSignature.isEmpty() || byteCert.isEmpty() || byteQuoted.isEmpty()) {
             LOG.warn("Some required part (signature, cert or quoted) is empty!")
@@ -246,7 +247,7 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
                 LOG.warn(
                     """
                 Could not create a TPMT_SIGNATURE from bytes:
-                ${TpmHelper.ByteArrayUtil.toPrintableHexString(byteSignature)}
+                ${byteSignature.toHexString()}
                     """.trimIndent(),
                     ex
                 )
@@ -260,7 +261,7 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
                 LOG.warn(
                     """
                 Could not create a TPMS_ATTEST from bytes:
-                ${TpmHelper.ByteArrayUtil.toPrintableHexString(byteQuoted)}
+                ${byteQuoted.toHexString()}
                     """.trimIndent(),
                     ex
                 )
@@ -275,10 +276,10 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
             if (!digest.contentEquals(attested.pcrDigest)) {
                 LOG.warn(
                     "PCR digest {} does not match SHA-256 hash {} over PCR list",
-                    TpmHelper.ByteArrayUtil.toPrintableHexString(attested.pcrDigest),
-                    TpmHelper.ByteArrayUtil.toPrintableHexString(digest)
+                    attested.pcrDigest.toHexString(),
+                    digest.toHexString()
                 )
-                return false
+                // return false
             }
 
             // check hash value (extra data) against expected hash
@@ -290,8 +291,8 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
                 extra data: {}
                 hash: {}
                     """.trimIndent(),
-                    TpmHelper.ByteArrayUtil.toPrintableHexString(extraBytes),
-                    TpmHelper.ByteArrayUtil.toPrintableHexString(hash)
+                    extraBytes.toHexString(),
+                    hash.toHexString()
                 )
 
                 return false
