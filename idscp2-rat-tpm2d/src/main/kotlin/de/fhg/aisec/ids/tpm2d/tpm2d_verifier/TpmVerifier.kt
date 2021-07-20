@@ -270,7 +270,7 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
             // Check PCR digest against digest of PCR values list
             val attested = tpmsAttest.attested as TPMS_QUOTE_INFO
             val digest = MessageDigest.getInstance("SHA-256").apply {
-                response.pcrValuesList.forEach { update(it.toByteArray()) }
+                response.pcrValuesList.forEach { update(it.value.toByteArray()) }
             }.digest()
             if (!digest.contentEquals(attested.pcrDigest)) {
                 LOG.warn(
@@ -278,6 +278,7 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
                     TpmHelper.ByteArrayUtil.toPrintableHexString(attested.pcrDigest),
                     TpmHelper.ByteArrayUtil.toPrintableHexString(digest)
                 )
+                return false
             }
 
             // check hash value (extra data) against expected hash
