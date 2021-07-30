@@ -101,7 +101,9 @@ class CmcProver(fsmListener: RatProverFsmListener) : RatProverDriver<CmcProverCo
     override fun run() {
         // CMC Challenge-Response Protocol
         try {
-            LOG.debug("Wait for challenge from verifier")
+            if (LOG.isDebugEnabled) {
+                LOG.debug("Wait for challenge from verifier")
+            }
             val ratVerifierMsg = waitForVerifierMsg()
 
             if (LOG.isDebugEnabled) {
@@ -117,9 +119,14 @@ class CmcProver(fsmListener: RatProverFsmListener) : RatProverDriver<CmcProverCo
             }
 
             // wait for result
-            LOG.debug("Wait for RAT result from RAT verifier")
-            val ratResultBytes = waitForVerifierMsg()
-            val ratResult = gson.fromJson(String(ratResultBytes), AttestationResult::class.java)
+            if (LOG.isDebugEnabled) {
+                LOG.debug("Wait for RAT result from RAT verifier")
+            }
+            val ratResultJson = String(waitForVerifierMsg())
+            if (LOG.isTraceEnabled) {
+                LOG.trace(ratResultJson)
+            }
+            val ratResult = gson.fromJson(ratResultJson, AttestationResult::class.java)
 
             // notify fsm
             if (ratResult.result) {

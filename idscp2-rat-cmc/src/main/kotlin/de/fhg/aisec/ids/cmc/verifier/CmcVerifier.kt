@@ -57,9 +57,9 @@ class CmcVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<CmcVe
         queue.add(message)
     }
 
-    private fun waitForAttestationReport(): Map<String, Any> {
+    private fun waitForAttestationReport(): String {
         try {
-            return gson.fromJson(String(queue.take()), object : TypeToken<Map<String, Any>>(){}.type)
+            return String(queue.take())
         } catch (e: Exception) {
             if (running) {
                 fsmListener.onRatVerifierMessage(InternalControlMessage.RAT_VERIFIER_FAILED)
@@ -119,32 +119,51 @@ class CmcVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<CmcVe
                 LOG.debug("Generate and send challenge to remote prover")
             }
             val nonce = CmcHelper.generateNonce(20).toHexString()
-            LOG.debug("Challenge nonce is: $nonce")
+            if (LOG.isDebugEnabled) {
+                LOG.debug("Challenge nonce is: $nonce")
+            }
 
-            // send challenge to prover
             val attestationRequest = AttestationRequest("Attestation Report Request", nonce)
-            val ratChallenge = gson.toJson(attestationRequest).toByteArray()
-            fsmListener.onRatVerifierMessage(InternalControlMessage.RAT_VERIFIER_MSG, ratChallenge)
+            val ratRequest = gson.toJson(attestationRequest)
+            if (LOG.isTraceEnabled) {
+                println(ratRequest)
+            }
+            // send request to prover
+            fsmListener.onRatVerifierMessage(InternalControlMessage.RAT_VERIFIER_MSG, ratRequest.toByteArray())
 
             // wait for attestation response
-            LOG.debug("Wait for RAT prover message with attestation response")
+            if (LOG.isDebugEnabled) {
+                LOG.debug("Wait for RAT prover message with attestation response")
+            }
+            // Receive JWS, packed as JSON, from prover
             val attestationReport = waitForAttestationReport()
-            LOG.debug("Got challenge response. Start validation ...")
+            if (LOG.isDebugEnabled) {
+                LOG.debug("Got challenge response. Start validation...")
+            }
 
             val verificationRequest = VerificationRequest("Verification Request", attestationReport, nonce)
             CmcSocket(config.cmcHost, config.cmcPort).use { cmcSocket ->
-                val resultBytes = cmcSocket.request(gson.toJson(verificationRequest).toByteArray())
-                val verificationResult = gson.fromJson(String(resultBytes), VerificationResult::class.java)
+                val verificationRequestJson = gson.toJson(verificationRequest)
+                if (LOG.isTraceEnabled) {
+                    println(verificationRequestJson)
+                }
+                // Pass proof to CMC, get verification result
+                val resultJson = String(cmcSocket.request(verificationRequestJson.toByteArray()))
+                if (LOG.isTraceEnabled) {
+                    println(resultJson)
+                }
+                val verificationResult = gson.fromJson(resultJson, VerificationResult::class.java)
                 if (verificationResult.raSuccessful) {
-                    // notify fsm about success
                     if (LOG.isDebugEnabled) {
                         LOG.debug("CMC verification succeed")
                     }
+                    // Notify prover about success
                     sendRatResult(true)
                 } else {
                     if (LOG.isDebugEnabled) {
                         LOG.debug("CMC verification failed")
                     }
+                    // Notify prover about rejection
                     sendRatResult(false)
                 }
             }
