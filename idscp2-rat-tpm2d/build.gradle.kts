@@ -1,6 +1,8 @@
 import com.google.protobuf.gradle.protobuf
 import org.gradle.plugins.ide.idea.model.IdeaModel
 
+version = "0.2.2"
+
 apply(plugin = "java")
 apply(plugin = "com.google.protobuf")
 apply(plugin = "idea")

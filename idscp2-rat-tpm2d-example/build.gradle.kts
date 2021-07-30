@@ -1,3 +1,5 @@
+version = "0.2.2"
+
 apply(plugin = "java")
 
 val api by configurations

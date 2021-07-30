@@ -13,11 +13,11 @@ plugins {
 
 val descriptions: Map < String, String > = mapOf(
     "idscp2-rat-tpm2d" to "IDSCP2 TPM 2.0 Remote Attestation Driver",
+    "idscp2-rat-cmc" to "IDSCP2 CMC Remote Attestation Driver"
 )
 
 allprojects {
     group = "de.fhg.aisec.ids"
-    version = "0.2.2"
 
     repositories {
         mavenCentral()
@@ -120,28 +120,28 @@ subprojects {
             }
 
             repositories {
-                // mavenLocal()
-                maven {
-                    url = uri(
-                        if (version.toString().endsWith("SNAPSHOT")) {
-                            "https://oss.sonatype.org/content/repositories/snapshots"
-                        } else {
-                            "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-                        }
-                    )
-
-                    credentials {
-                        username = project.findProperty("deployUsername") as? String
-                        password = project.findProperty("deployPassword") as? String
-                    }
-                }
+                mavenLocal()
+                // maven {
+                //     url = uri(
+                //         if (version.toString().endsWith("SNAPSHOT")) {
+                //             "https://oss.sonatype.org/content/repositories/snapshots"
+                //         } else {
+                //             "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+                //         }
+                //     )
+                //
+                //     credentials {
+                //         username = project.findProperty("deployUsername") as? String
+                //         password = project.findProperty("deployPassword") as? String
+                //     }
+                // }
             }
         }
 
-        signing {
-            useGpgCmd()
-            sign(publishing.publications.getByName("idscp2Library"))
-        }
+        // signing {
+        //     useGpgCmd()
+        //     sign(publishing.publications.getByName("idscp2Library"))
+        // }
     }
 
     apply(plugin = "com.github.jk1.dependency-license-report")
