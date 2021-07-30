@@ -20,7 +20,6 @@
 package de.fhg.aisec.ids.cmc.verifier
 
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import de.fhg.aisec.ids.cmc.CmcSocket
 import de.fhg.aisec.ids.cmc.CmcException
 import de.fhg.aisec.ids.cmc.CmcHelper
@@ -142,30 +141,31 @@ class CmcVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<CmcVe
             }
 
             val verificationRequest = VerificationRequest("Verification Request", attestationReport, nonce)
+            val verificationRequestJson = gson.toJson(verificationRequest)
+            if (LOG.isTraceEnabled) {
+                println(verificationRequestJson)
+            }
+            val resultJson: String
             CmcSocket(config.cmcHost, config.cmcPort).use { cmcSocket ->
-                val verificationRequestJson = gson.toJson(verificationRequest)
-                if (LOG.isTraceEnabled) {
-                    println(verificationRequestJson)
-                }
                 // Pass proof to CMC, get verification result
-                val resultJson = String(cmcSocket.request(verificationRequestJson.toByteArray()))
-                if (LOG.isTraceEnabled) {
-                    println(resultJson)
+                resultJson = String(cmcSocket.request(verificationRequestJson.toByteArray()))
+            }
+            if (LOG.isTraceEnabled) {
+                println(resultJson)
+            }
+            val verificationResult = gson.fromJson(resultJson, VerificationResult::class.java)
+            if (verificationResult.raSuccessful) {
+                if (LOG.isDebugEnabled) {
+                    LOG.debug("CMC verification succeed")
                 }
-                val verificationResult = gson.fromJson(resultJson, VerificationResult::class.java)
-                if (verificationResult.raSuccessful) {
-                    if (LOG.isDebugEnabled) {
-                        LOG.debug("CMC verification succeed")
-                    }
-                    // Notify prover about success
-                    sendRatResult(true)
-                } else {
-                    if (LOG.isDebugEnabled) {
-                        LOG.debug("CMC verification failed")
-                    }
-                    // Notify prover about rejection
-                    sendRatResult(false)
+                // Notify prover about success
+                sendRatResult(true)
+            } else {
+                if (LOG.isDebugEnabled) {
+                    LOG.debug("CMC verification failed")
                 }
+                // Notify prover about rejection
+                sendRatResult(false)
             }
         } catch (t: Throwable) {
             LOG.error("Error in CMC Verifier", t)

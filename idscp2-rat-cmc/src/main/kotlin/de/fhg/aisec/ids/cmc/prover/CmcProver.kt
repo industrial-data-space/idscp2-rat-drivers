@@ -110,13 +110,14 @@ class CmcProver(fsmListener: RatProverFsmListener) : RatProverDriver<CmcProverCo
                 LOG.debug("Got rat challenge from rat verifier. Starting communication...")
             }
 
+            val resultBytes: ByteArray
             CmcSocket(config.cmcHost, config.cmcPort).use { cmcSocket ->
-                val resultBytes = cmcSocket.request(ratVerifierMsg)
-                if (LOG.isDebugEnabled) {
-                    LOG.debug("Got CMC response, send response to verifier")
-                }
-                fsmListener.onRatProverMessage(InternalControlMessage.RAT_PROVER_MSG, resultBytes)
+                resultBytes = cmcSocket.request(ratVerifierMsg)
             }
+            if (LOG.isDebugEnabled) {
+                LOG.debug("Got CMC response, send response to verifier")
+            }
+            fsmListener.onRatProverMessage(InternalControlMessage.RAT_PROVER_MSG, resultBytes)
 
             // wait for result
             if (LOG.isDebugEnabled) {
