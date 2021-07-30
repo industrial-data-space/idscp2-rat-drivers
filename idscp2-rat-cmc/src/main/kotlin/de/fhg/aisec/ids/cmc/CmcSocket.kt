@@ -19,6 +19,8 @@
  */
 package de.fhg.aisec.ids.cmc
 
+import java.io.DataInputStream
+import java.io.DataOutputStream
 import java.io.IOException
 import java.net.Socket
 
@@ -26,12 +28,17 @@ import java.net.Socket
  * Socket for communication with the CMC
  */
 class CmcSocket(host: String, port: Int) : Socket(host, port) {
+    private val ins: DataInputStream = DataInputStream(this.inputStream)
+    private val outs: DataOutputStream = DataOutputStream(this.outputStream)
 
     @Throws(IOException::class)
     fun request(request: ByteArray): ByteArray {
         // Write attestation request message
-        outputStream.write(request)
+        outs.writeInt(request.size)
+        outs.write(request)
         // Read attestation result message
-        return inputStream.readAllBytes()
+        val resultBytes = ByteArray(ins.readInt())
+        ins.readFully(resultBytes)
+        return resultBytes
     }
 }
