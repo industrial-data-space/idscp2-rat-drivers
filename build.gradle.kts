@@ -121,27 +121,27 @@ subprojects {
 
             repositories {
                 mavenLocal()
-                // maven {
-                //     url = uri(
-                //         if (version.toString().endsWith("SNAPSHOT")) {
-                //             "https://oss.sonatype.org/content/repositories/snapshots"
-                //         } else {
-                //             "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-                //         }
-                //     )
-                //
-                //     credentials {
-                //         username = project.findProperty("deployUsername") as? String
-                //         password = project.findProperty("deployPassword") as? String
-                //     }
-                // }
+                maven {
+                    url = uri(
+                        if (version.toString().endsWith("SNAPSHOT")) {
+                            "https://oss.sonatype.org/content/repositories/snapshots"
+                        } else {
+                            "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+                        }
+                    )
+
+                    credentials {
+                        username = project.findProperty("deployUsername") as? String
+                        password = project.findProperty("deployPassword") as? String
+                    }
+                }
             }
         }
 
-        // signing {
-        //     useGpgCmd()
-        //     sign(publishing.publications.getByName("idscp2Library"))
-        // }
+        signing {
+            useGpgCmd()
+            sign(publishing.publications.getByName("idscp2Library"))
+        }
     }
 
     apply(plugin = "com.github.jk1.dependency-license-report")
