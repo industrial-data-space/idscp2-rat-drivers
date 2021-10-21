@@ -19,9 +19,9 @@
  */
 package de.fhg.aisec.ids.tpm2d.tpm2d_verifier
 
-import de.fhg.aisec.ids.idscp2.idscp_core.drivers.RatVerifierDriver
+import de.fhg.aisec.ids.idscp2.idscp_core.drivers.RaVerifierDriver
 import de.fhg.aisec.ids.idscp2.idscp_core.fsm.InternalControlMessage
-import de.fhg.aisec.ids.idscp2.idscp_core.fsm.fsmListeners.RatVerifierFsmListener
+import de.fhg.aisec.ids.idscp2.idscp_core.fsm.fsmListeners.RaVerifierFsmListener
 import de.fhg.aisec.ids.tpm2d.TpmException
 import de.fhg.aisec.ids.tpm2d.TpmHelper
 import de.fhg.aisec.ids.tpm2d.TpmMessageFactory
@@ -45,11 +45,11 @@ import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 
 /**
- * A TPM2d RatVerifier driver that verifies the remote peer's identity using TPM2d
+ * A TPM2d RaVerifier driver that verifies the remote peer's identity using TPM2d
  *
  * @author Leon Beckmann (leon.beckmann@aisec.fraunhofer.de)
  */
-class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVerifierConfig>(fsmListener) {
+class TpmVerifier(fsmListener: RaVerifierFsmListener) : RaVerifierDriver<TpmVerifierConfig>(fsmListener) {
     private val queue: BlockingQueue<ByteArray> = LinkedBlockingQueue()
     private lateinit var config: TpmVerifierConfig
 
@@ -70,19 +70,19 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
             return TpmMessage.parseFrom(msg)
         } catch (e: Exception) {
             if (running) {
-                fsmListener.onRatVerifierMessage(InternalControlMessage.RAT_VERIFIER_FAILED)
+                fsmListener.onRaVerifierMessage(InternalControlMessage.RA_VERIFIER_FAILED)
             }
             throw TpmException("Interrupted or invalid message", e)
         }
     }
 
-    private fun sendRatResult(result: Boolean) {
+    private fun sendRaResult(result: Boolean) {
         val ratResult = TpmMessageFactory.getAttestationResultMessage(result).toByteArray()
-        fsmListener.onRatVerifierMessage(InternalControlMessage.RAT_VERIFIER_MSG, ratResult)
+        fsmListener.onRaVerifierMessage(InternalControlMessage.RA_VERIFIER_MSG, ratResult)
         if (result) {
-            fsmListener.onRatVerifierMessage(InternalControlMessage.RAT_VERIFIER_OK)
+            fsmListener.onRaVerifierMessage(InternalControlMessage.RA_VERIFIER_OK)
         } else {
-            fsmListener.onRatVerifierMessage(InternalControlMessage.RAT_VERIFIER_FAILED)
+            fsmListener.onRaVerifierMessage(InternalControlMessage.RA_VERIFIER_FAILED)
         }
     }
 
@@ -92,12 +92,12 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
      * Verifier:
      * -------------------------
      * Generate NonceV
-     * create RatChallenge (NonceV, aType, pcr_mask)
+     * create RaChallenge (NonceV, aType, pcr_mask)
      * -------------------------
      *
      * Prover:
      * -------------------------
-     * get RatChallenge (NonceV, aType, pcr_mask)
+     * get RaChallenge (NonceV, aType, pcr_mask)
      * hash = calculateHash(nonceV, certV)
      * req = generate RemoteToTpm (hash, aType, pcr_mask)
      * TpmToRemote = tpmSocket.attestationRequest(req)
@@ -110,7 +110,7 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
      * hash = calculateHash(nonceV, certV)
      * check signature(response, hash)
      * check golden values from DAT (aType, response)
-     * create RatResult
+     * create RaResult
      * -------------------------
      *
      * Prover:
@@ -133,7 +133,7 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
             val ratChallenge = TpmMessageFactory.getAttestationChallengeMessage(
                 nonce, config.expectedAType, config.expectedAttestationMask
             ).toByteArray()
-            fsmListener.onRatVerifierMessage(InternalControlMessage.RAT_VERIFIER_MSG, ratChallenge)
+            fsmListener.onRaVerifierMessage(InternalControlMessage.RA_VERIFIER_MSG, ratChallenge)
 
             // wait for attestation response
             LOG.debug("Wait for RAT prover message with TPM attestation response")
@@ -141,7 +141,7 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
 
             // check if wrapper contains expected rat response
             if (!ratProverMsg.hasRatResponse()) {
-                fsmListener.onRatVerifierMessage(InternalControlMessage.RAT_VERIFIER_FAILED)
+                fsmListener.onRaVerifierMessage(InternalControlMessage.RA_VERIFIER_FAILED)
                 throw TpmException("Missing TPM challenge response")
             } else if (LOG.isDebugEnabled) {
                 LOG.debug("Got TPM challenge response. Start validation ...")
@@ -151,7 +151,7 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
 
             // validate signature
             if (!checkSignature(resp, TpmHelper.calculateHash(nonce, config.localCertificate))) {
-                sendRatResult(false)
+                sendRaResult(false)
                 throw TpmException("Invalid TPM signature")
             } else if (LOG.isDebugEnabled) {
                 LOG.debug("TPM signature valid and certificate trusted")
@@ -159,7 +159,7 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
 
             // validate pcr values
             if (!checkPcrValues(resp)) {
-                sendRatResult(false)
+                sendRaResult(false)
                 throw TpmException("Mismatch between PCR values and golden values")
             } else if (LOG.isDebugEnabled) {
                 LOG.debug("PCR values trusted")
@@ -169,7 +169,7 @@ class TpmVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<TpmVe
             if (LOG.isDebugEnabled) {
                 LOG.debug("TPM verification succeed")
             }
-            sendRatResult(true)
+            sendRaResult(true)
         } catch (t: Throwable) {
             LOG.error("Error in TPM Verifier", t)
             throw t

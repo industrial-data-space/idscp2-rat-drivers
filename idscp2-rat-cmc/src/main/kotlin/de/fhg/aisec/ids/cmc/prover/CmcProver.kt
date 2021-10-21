@@ -1,6 +1,6 @@
 /*-
  * ========================LICENSE_START=================================
- * idscp2-rat-tpm2d
+ * idscp2-rat-cmc
  * %%
  * Copyright (C) 2021 Fraunhofer AISEC
  * %%
@@ -20,22 +20,22 @@
 package de.fhg.aisec.ids.cmc.prover
 
 import com.google.gson.Gson
-import de.fhg.aisec.ids.idscp2.idscp_core.drivers.RatProverDriver
-import de.fhg.aisec.ids.idscp2.idscp_core.fsm.InternalControlMessage
-import de.fhg.aisec.ids.idscp2.idscp_core.fsm.fsmListeners.RatProverFsmListener
 import de.fhg.aisec.ids.cmc.CmcException
 import de.fhg.aisec.ids.cmc.CmcSocket
 import de.fhg.aisec.ids.cmc.messages.AttestationResult
+import de.fhg.aisec.ids.idscp2.idscp_core.drivers.RaProverDriver
+import de.fhg.aisec.ids.idscp2.idscp_core.fsm.InternalControlMessage
+import de.fhg.aisec.ids.idscp2.idscp_core.fsm.fsmListeners.RaProverFsmListener
 import org.slf4j.LoggerFactory
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 
 /**
- * A CMC RatProver Driver implementation that proves its identity to a remote peer using CMC
+ * A CMC RaProver Driver implementation that proves its identity to a remote peer using CMC
  *
  * @author Leon Beckmann (leon.beckmann@aisec.fraunhofer.de)
  */
-class CmcProver(fsmListener: RatProverFsmListener) : RatProverDriver<CmcProverConfig>(fsmListener) {
+class CmcProver(fsmListener: RaProverFsmListener) : RaProverDriver<CmcProverConfig>(fsmListener) {
     private val queue: BlockingQueue<ByteArray> = LinkedBlockingQueue()
     private lateinit var config: CmcProverConfig
     private val gson = Gson()
@@ -59,7 +59,7 @@ class CmcProver(fsmListener: RatProverFsmListener) : RatProverDriver<CmcProverCo
             return queue.take()
         } catch (e: Exception) {
             if (running) {
-                fsmListener.onRatProverMessage(InternalControlMessage.RAT_PROVER_FAILED)
+                fsmListener.onRaProverMessage(InternalControlMessage.RA_PROVER_FAILED)
             }
             throw CmcException("Interrupted or invalid message", e)
         }
@@ -71,12 +71,12 @@ class CmcProver(fsmListener: RatProverFsmListener) : RatProverDriver<CmcProverCo
      * Verifier:
      * -------------------------
      * Generate NonceV
-     * create RatChallenge (NonceV, aType, pcr_mask)
+     * create RaChallenge (NonceV, aType, pcr_mask)
      * -------------------------
      *
      * Prover:
      * -------------------------
-     * get RatChallenge (NonceV, aType, pcr_mask)
+     * get RaChallenge (NonceV, aType, pcr_mask)
      * hash = calculateHash(nonceV, certV)
      * req = generate RemoteToTpm (hash, aType, pcr_mask)
      * TpmToRemote = tpmSocket.attestationRequest(req)
@@ -89,7 +89,7 @@ class CmcProver(fsmListener: RatProverFsmListener) : RatProverDriver<CmcProverCo
      * hash = calculateHash(nonceV, certV)
      * check signature(response, hash)
      * check golden values from DAT (aType, response)
-     * create RatResult
+     * create RaResult
      * -------------------------
      *
      * Prover:
@@ -117,7 +117,7 @@ class CmcProver(fsmListener: RatProverFsmListener) : RatProverDriver<CmcProverCo
             if (LOG.isDebugEnabled) {
                 LOG.debug("Got CMC response, send response to verifier")
             }
-            fsmListener.onRatProverMessage(InternalControlMessage.RAT_PROVER_MSG, resultBytes)
+            fsmListener.onRaProverMessage(InternalControlMessage.RA_PROVER_MSG, resultBytes)
 
             // wait for result
             if (LOG.isDebugEnabled) {
@@ -134,12 +134,12 @@ class CmcProver(fsmListener: RatProverFsmListener) : RatProverDriver<CmcProverCo
                 if (LOG.isDebugEnabled) {
                     LOG.debug("CMC attestation succeed")
                 }
-                fsmListener.onRatProverMessage(InternalControlMessage.RAT_PROVER_OK)
+                fsmListener.onRaProverMessage(InternalControlMessage.RA_PROVER_OK)
             } else {
                 if (LOG.isWarnEnabled) {
                     LOG.warn("CMC attestation failed")
                 }
-                fsmListener.onRatProverMessage(InternalControlMessage.RAT_PROVER_FAILED)
+                fsmListener.onRaProverMessage(InternalControlMessage.RA_PROVER_FAILED)
             }
         } catch (t: Throwable) {
             LOG.error("Error in CMC prover", t)

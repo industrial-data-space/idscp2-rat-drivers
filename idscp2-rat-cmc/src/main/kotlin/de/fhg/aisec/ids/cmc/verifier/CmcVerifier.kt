@@ -1,6 +1,6 @@
 /*-
  * ========================LICENSE_START=================================
- * idscp2-rat-tpm2d
+ * idscp2-rat-cmc
  * %%
  * Copyright (C) 2021 Fraunhofer AISEC
  * %%
@@ -20,27 +20,27 @@
 package de.fhg.aisec.ids.cmc.verifier
 
 import com.google.gson.Gson
-import de.fhg.aisec.ids.cmc.CmcSocket
 import de.fhg.aisec.ids.cmc.CmcException
 import de.fhg.aisec.ids.cmc.CmcHelper
+import de.fhg.aisec.ids.cmc.CmcSocket
 import de.fhg.aisec.ids.cmc.messages.AttestationRequest
 import de.fhg.aisec.ids.cmc.messages.AttestationResult
 import de.fhg.aisec.ids.cmc.messages.VerificationRequest
 import de.fhg.aisec.ids.cmc.messages.VerificationResult
 import de.fhg.aisec.ids.cmc.toHexString
-import de.fhg.aisec.ids.idscp2.idscp_core.drivers.RatVerifierDriver
+import de.fhg.aisec.ids.idscp2.idscp_core.drivers.RaVerifierDriver
 import de.fhg.aisec.ids.idscp2.idscp_core.fsm.InternalControlMessage
-import de.fhg.aisec.ids.idscp2.idscp_core.fsm.fsmListeners.RatVerifierFsmListener
+import de.fhg.aisec.ids.idscp2.idscp_core.fsm.fsmListeners.RaVerifierFsmListener
 import org.slf4j.LoggerFactory
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 
 /**
- * A CMC RatVerifier driver that verifies the remote peer's identity using CMC
+ * A CMC RaVerifier driver that verifies the remote peer's identity using CMC
  *
  * @author Leon Beckmann (leon.beckmann@aisec.fraunhofer.de)
  */
-class CmcVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<CmcVerifierConfig>(fsmListener) {
+class CmcVerifier(fsmListener: RaVerifierFsmListener) : RaVerifierDriver<CmcVerifierConfig>(fsmListener) {
     private val queue: BlockingQueue<ByteArray> = LinkedBlockingQueue()
     private val gson = Gson()
     private lateinit var config: CmcVerifierConfig
@@ -61,19 +61,19 @@ class CmcVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<CmcVe
             return String(queue.take())
         } catch (e: Exception) {
             if (running) {
-                fsmListener.onRatVerifierMessage(InternalControlMessage.RAT_VERIFIER_FAILED)
+                fsmListener.onRaVerifierMessage(InternalControlMessage.RA_VERIFIER_FAILED)
             }
             throw CmcException("Interrupted or invalid message", e)
         }
     }
 
-    private fun sendRatResult(result: Boolean) {
+    private fun sendRaResult(result: Boolean) {
         val ratResult = gson.toJson(AttestationResult(true)).toByteArray()
-        fsmListener.onRatVerifierMessage(InternalControlMessage.RAT_VERIFIER_MSG, ratResult)
+        fsmListener.onRaVerifierMessage(InternalControlMessage.RA_VERIFIER_MSG, ratResult)
         if (result) {
-            fsmListener.onRatVerifierMessage(InternalControlMessage.RAT_VERIFIER_OK)
+            fsmListener.onRaVerifierMessage(InternalControlMessage.RA_VERIFIER_OK)
         } else {
-            fsmListener.onRatVerifierMessage(InternalControlMessage.RAT_VERIFIER_FAILED)
+            fsmListener.onRaVerifierMessage(InternalControlMessage.RA_VERIFIER_FAILED)
         }
     }
 
@@ -83,12 +83,12 @@ class CmcVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<CmcVe
      * Verifier:
      * -------------------------
      * Generate NonceV
-     * create RatChallenge (NonceV, aType, pcr_mask)
+     * create RaChallenge (NonceV, aType, pcr_mask)
      * -------------------------
      *
      * Prover:
      * -------------------------
-     * get RatChallenge (NonceV, aType, pcr_mask)
+     * get RaChallenge (NonceV, aType, pcr_mask)
      * hash = calculateHash(nonceV, certV)
      * req = generate RemoteToTpm (hash, aType, pcr_mask)
      * TpmToRemote = tpmSocket.attestationRequest(req)
@@ -101,7 +101,7 @@ class CmcVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<CmcVe
      * hash = calculateHash(nonceV, certV)
      * check signature(response, hash)
      * check golden values from DAT (aType, response)
-     * create RatResult
+     * create RaResult
      * -------------------------
      *
      * Prover:
@@ -128,7 +128,7 @@ class CmcVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<CmcVe
                 println(ratRequest)
             }
             // send request to prover
-            fsmListener.onRatVerifierMessage(InternalControlMessage.RAT_VERIFIER_MSG, ratRequest.toByteArray())
+            fsmListener.onRaVerifierMessage(InternalControlMessage.RA_VERIFIER_MSG, ratRequest.toByteArray())
 
             // wait for attestation response
             if (LOG.isDebugEnabled) {
@@ -159,13 +159,13 @@ class CmcVerifier(fsmListener: RatVerifierFsmListener) : RatVerifierDriver<CmcVe
                     LOG.debug("CMC verification succeed")
                 }
                 // Notify prover about success
-                sendRatResult(true)
+                sendRaResult(true)
             } else {
                 if (LOG.isDebugEnabled) {
                     LOG.debug("CMC verification failed")
                 }
                 // Notify prover about rejection
-                sendRatResult(false)
+                sendRaResult(false)
             }
         } catch (t: Throwable) {
             LOG.error("Error in CMC Verifier", t)

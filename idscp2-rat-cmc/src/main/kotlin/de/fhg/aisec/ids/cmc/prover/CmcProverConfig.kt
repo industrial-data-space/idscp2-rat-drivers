@@ -1,6 +1,6 @@
 /*-
  * ========================LICENSE_START=================================
- * idscp2-rat-tpm2d
+ * idscp2-rat-cmc
  * %%
  * Copyright (C) 2021 Fraunhofer AISEC
  * %%
@@ -20,10 +20,9 @@
 package de.fhg.aisec.ids.cmc.prover
 
 import de.fhg.aisec.ids.cmc.CmcConfig
-import de.fhg.aisec.ids.cmc.verifier.CmcVerifierConfig
 
 /**
- * A configuration class for TPM2d RatDriver
+ * A configuration class for TPM2d RaDriver
  *
  * @author Leon Beckmann (leon.beckmann@aisec.fraunhofer.de)
  */

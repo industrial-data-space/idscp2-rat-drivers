@@ -20,7 +20,7 @@
 package de.fhg.aisec.ids.tpm2d.tpm2d_prover
 
 /**
- * A configuration class for TPM2d RatDriver
+ * A configuration class for TPM2d RaDriver
  *
  * @author Leon Beckmann (leon.beckmann@aisec.fraunhofer.de)
  */

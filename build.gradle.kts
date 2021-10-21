@@ -59,7 +59,7 @@ subprojects {
     dependencies {
         // Logging API
         api("org.slf4j", "slf4j-api", "1.7.30")
-        api("de.fhg.aisec.ids", "idscp2", "0.5.0")
+        api("de.fhg.aisec.ids", "idscp2", "0.6.0")
         api("org.jetbrains.kotlin", "kotlin-stdlib-jdk8", "1.5.20")
     }
 
@@ -120,7 +120,7 @@ subprojects {
             }
 
             repositories {
-                mavenLocal()
+                // mavenLocal()
                 maven {
                     url = uri(
                         if (version.toString().endsWith("SNAPSHOT")) {

@@ -19,9 +19,9 @@
  */
 package de.fhg.aisec.ids.tpm2d.tpm2d_prover
 
-import de.fhg.aisec.ids.idscp2.idscp_core.drivers.RatProverDriver
+import de.fhg.aisec.ids.idscp2.idscp_core.drivers.RaProverDriver
 import de.fhg.aisec.ids.idscp2.idscp_core.fsm.InternalControlMessage
-import de.fhg.aisec.ids.idscp2.idscp_core.fsm.fsmListeners.RatProverFsmListener
+import de.fhg.aisec.ids.idscp2.idscp_core.fsm.fsmListeners.RaProverFsmListener
 import de.fhg.aisec.ids.tpm2d.TpmException
 import de.fhg.aisec.ids.tpm2d.TpmHelper
 import de.fhg.aisec.ids.tpm2d.TpmMessageFactory
@@ -36,11 +36,11 @@ import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 
 /**
- * A TPM2d RatProver Driver implementation that proves its identity to a remote peer using TPM2d
+ * A TPM2d RaProver Driver implementation that proves its identity to a remote peer using TPM2d
  *
  * @author Leon Beckmann (leon.beckmann@aisec.fraunhofer.de)
  */
-class TpmProver(fsmListener: RatProverFsmListener) : RatProverDriver<TpmProverConfig>(fsmListener) {
+class TpmProver(fsmListener: RaProverFsmListener) : RaProverDriver<TpmProverConfig>(fsmListener) {
     private val queue: BlockingQueue<ByteArray> = LinkedBlockingQueue()
     private lateinit var config: TpmProverConfig
 
@@ -62,7 +62,7 @@ class TpmProver(fsmListener: RatProverFsmListener) : RatProverDriver<TpmProverCo
             return TpmMessage.parseFrom(msg)
         } catch (e: Exception) {
             if (running) {
-                fsmListener.onRatProverMessage(InternalControlMessage.RAT_PROVER_FAILED)
+                fsmListener.onRaProverMessage(InternalControlMessage.RA_PROVER_FAILED)
             }
             throw TpmException("Interrupted or invalid message", e)
         }
@@ -74,12 +74,12 @@ class TpmProver(fsmListener: RatProverFsmListener) : RatProverDriver<TpmProverCo
      * Verifier:
      * -------------------------
      * Generate NonceV
-     * create RatChallenge (NonceV, aType, pcr_mask)
+     * create RaChallenge (NonceV, aType, pcr_mask)
      * -------------------------
      *
      * Prover:
      * -------------------------
-     * get RatChallenge (NonceV, aType, pcr_mask)
+     * get RaChallenge (NonceV, aType, pcr_mask)
      * hash = calculateHash(nonceV, certV)
      * req = generate RemoteToTpm (hash, aType, pcr_mask)
      * TpmToRemote = tpmSocket.attestationRequest(req)
@@ -92,7 +92,7 @@ class TpmProver(fsmListener: RatProverFsmListener) : RatProverDriver<TpmProverCo
      * hash = calculateHash(nonceV, certV)
      * check signature(response, hash)
      * check golden values from DAT (aType, response)
-     * create RatResult
+     * create RaResult
      * -------------------------
      *
      * Prover:
@@ -104,14 +104,14 @@ class TpmProver(fsmListener: RatProverFsmListener) : RatProverDriver<TpmProverCo
     override fun run() {
         // TPM Challenge-Response Protocol
         try {
-            // wait for RatChallenge from Verifier
+            // wait for RaChallenge from Verifier
             LOG.debug("Wait for TPM challenge from RAT verifier")
             var ratVerifierMsg = waitForVerifierMsg()
 
             // check if wrapper contains expected rat challenge
             if (!ratVerifierMsg.hasRatChallenge()) {
                 // unexpected message
-                fsmListener.onRatProverMessage(InternalControlMessage.RAT_PROVER_FAILED)
+                fsmListener.onRaProverMessage(InternalControlMessage.RA_PROVER_FAILED)
                 throw TpmException("Missing TPM challenge")
             } else if (LOG.isDebugEnabled) {
                 LOG.debug("Got rat challenge from rat verifier. Start TPM communication")
@@ -141,7 +141,7 @@ class TpmProver(fsmListener: RatProverFsmListener) : RatProverDriver<TpmProverCo
                 val tpmSocket = TpmSocket(config.tpmHost, config.tpmPort)
                 tpmSocket.requestAttestation(tpmRequest)
             } catch (e: IOException) {
-                fsmListener.onRatProverMessage(InternalControlMessage.RAT_PROVER_FAILED)
+                fsmListener.onRaProverMessage(InternalControlMessage.RA_PROVER_FAILED)
                 throw TpmException("Cannot request attestation from TPM", e)
             }
 
@@ -150,7 +150,7 @@ class TpmProver(fsmListener: RatProverFsmListener) : RatProverDriver<TpmProverCo
                 LOG.debug("Got TPM response, send TPM response to verifier")
             }
             val response = TpmMessageFactory.getAttestationResponseMessage(tpmResponse).toByteArray()
-            fsmListener.onRatProverMessage(InternalControlMessage.RAT_PROVER_MSG, response)
+            fsmListener.onRaProverMessage(InternalControlMessage.RA_PROVER_MSG, response)
 
             // wait for result
             LOG.debug("Wait for RAT result from RAT verifier")
@@ -158,7 +158,7 @@ class TpmProver(fsmListener: RatProverFsmListener) : RatProverDriver<TpmProverCo
 
             // check if wrapper contains expected rat result
             if (!ratVerifierMsg.hasRatResult()) {
-                fsmListener.onRatProverMessage(InternalControlMessage.RAT_PROVER_FAILED)
+                fsmListener.onRaProverMessage(InternalControlMessage.RA_PROVER_FAILED)
                 throw TpmException("Missing TPM result in RAT verifier message")
             } else if (LOG.isDebugEnabled) {
                 LOG.debug("Got TPM result from TPM verifier")
@@ -169,12 +169,12 @@ class TpmProver(fsmListener: RatProverFsmListener) : RatProverDriver<TpmProverCo
                 if (LOG.isDebugEnabled) {
                     LOG.debug("TPM attestation succeed")
                 }
-                fsmListener.onRatProverMessage(InternalControlMessage.RAT_PROVER_OK)
+                fsmListener.onRaProverMessage(InternalControlMessage.RA_PROVER_OK)
             } else {
                 if (LOG.isWarnEnabled) {
                     LOG.warn("TPM attestation failed")
                 }
-                fsmListener.onRatProverMessage(InternalControlMessage.RAT_PROVER_FAILED)
+                fsmListener.onRaProverMessage(InternalControlMessage.RA_PROVER_FAILED)
             }
         } catch (t: Throwable) {
             LOG.error("Error in TPM prover", t)

@@ -27,8 +27,8 @@ import de.fhg.aisec.ids.idscp2.idscp_core.api.idscp_connection.Idscp2Connection
 import de.fhg.aisec.ids.idscp2.idscp_core.api.idscp_connection.Idscp2ConnectionAdapter
 import de.fhg.aisec.ids.idscp2.idscp_core.api.idscp_connection.Idscp2ConnectionImpl
 import de.fhg.aisec.ids.idscp2.idscp_core.api.idscp_server.Idscp2ServerFactory
-import de.fhg.aisec.ids.idscp2.idscp_core.rat_registry.RatProverDriverRegistry
-import de.fhg.aisec.ids.idscp2.idscp_core.rat_registry.RatVerifierDriverRegistry
+import de.fhg.aisec.ids.idscp2.idscp_core.ra_registry.RaProverDriverRegistry
+import de.fhg.aisec.ids.idscp2.idscp_core.ra_registry.RaVerifierDriverRegistry
 import de.fhg.aisec.ids.tpm2d.TpmHelper
 import de.fhg.aisec.ids.tpm2d.messages.TpmAttestation
 import de.fhg.aisec.ids.tpm2d.tpm2d_prover.TpmProver
@@ -51,7 +51,7 @@ class Idscp2ServerInitiator : Idscp2EndpointListener<Idscp2Connection> {
             .setTpmHost("localhost")
             .setTpmPort(TpmProverConfig.DEFAULT_TPM_PORT)
             .build()
-        RatProverDriverRegistry.registerDriver(
+        RaProverDriverRegistry.registerDriver(
             TpmProver.ID, ::TpmProver, proverConfig
         )
 
@@ -81,7 +81,7 @@ class Idscp2ServerInitiator : Idscp2EndpointListener<Idscp2Connection> {
 //            .setExpectedAttestationType(TpmAttestation.IdsAttestationType.ADVANCED)
 //            .setExpectedAttestationMask(0x0603ff)
             .build()
-        RatVerifierDriverRegistry.registerDriver(
+        RaVerifierDriverRegistry.registerDriver(
             TpmVerifier.ID, ::TpmVerifier, verifierConfig
         )
 

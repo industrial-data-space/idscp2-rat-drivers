@@ -29,8 +29,8 @@ import de.fhg.aisec.ids.idscp2.idscp_core.api.idscp_connection.Idscp2Connection
 import de.fhg.aisec.ids.idscp2.idscp_core.api.idscp_connection.Idscp2ConnectionImpl
 import de.fhg.aisec.ids.idscp2.idscp_core.api.idscp_server.Idscp2Server
 import de.fhg.aisec.ids.idscp2.idscp_core.api.idscp_server.Idscp2ServerFactory
-import de.fhg.aisec.ids.idscp2.idscp_core.rat_registry.RatProverDriverRegistry
-import de.fhg.aisec.ids.idscp2.idscp_core.rat_registry.RatVerifierDriverRegistry
+import de.fhg.aisec.ids.idscp2.idscp_core.ra_registry.RaProverDriverRegistry
+import de.fhg.aisec.ids.idscp2.idscp_core.ra_registry.RaVerifierDriverRegistry
 import de.fhg.aisec.ids.tpm2d.messages.TpmAttestation
 import de.fhg.aisec.ids.tpm2d.tpm2d_prover.TpmProver
 import de.fhg.aisec.ids.tpm2d.tpm2d_prover.TpmProverConfig
@@ -58,8 +58,8 @@ class IntegrationTest {
     fun cleanup() {
         tpmSocket.close()
         idscp2Server.terminate()
-        RatProverDriverRegistry.unregisterDriver(TpmProver.ID)
-        RatVerifierDriverRegistry.unregisterDriver(TpmVerifier.ID)
+        RaProverDriverRegistry.unregisterDriver(TpmProver.ID)
+        RaVerifierDriverRegistry.unregisterDriver(TpmVerifier.ID)
     }
 
     private fun runTpmSimulator(port: Int) {
@@ -115,8 +115,8 @@ class IntegrationTest {
         )
 
         val attestationConfig = AttestationConfig.Builder()
-            .setSupportedRatSuite(arrayOf(TpmProver.ID))
-            .setExpectedRatSuite(arrayOf(TpmVerifier.ID))
+            .setSupportedRaSuite(arrayOf(TpmProver.ID))
+            .setExpectedRaSuite(arrayOf(TpmVerifier.ID))
             .build()
 
         // create client config
@@ -156,8 +156,8 @@ class IntegrationTest {
         val verifierConfig = TpmVerifierConfig.Builder()
             .build()
 
-        RatProverDriverRegistry.registerDriver(TpmProver.ID, ::TpmProver, proverConfig)
-        RatVerifierDriverRegistry.registerDriver(TpmVerifier.ID, ::TpmVerifier, verifierConfig)
+        RaProverDriverRegistry.registerDriver(TpmProver.ID, ::TpmProver, proverConfig)
+        RaVerifierDriverRegistry.registerDriver(TpmVerifier.ID, ::TpmVerifier, verifierConfig)
 
         runTpmSimulator(TpmProverConfig.DEFAULT_TPM_PORT)
 

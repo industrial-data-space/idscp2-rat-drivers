@@ -26,7 +26,7 @@ import java.security.cert.X509Certificate
 import java.util.Collections
 
 /**
- * A configuration class for TPM2d RatVerifier Driver
+ * A configuration class for TPM2d RaVerifier Driver
  *
  * @author Leon Beckmann (leon.beckmann@aisec.fraunhofer.de)
  */

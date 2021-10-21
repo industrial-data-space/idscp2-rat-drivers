@@ -1,4 +1,4 @@
-version = "0.1.0"
+version = "0.6.0"
 
 apply(plugin = "java")
 apply(plugin = "com.google.protobuf")
