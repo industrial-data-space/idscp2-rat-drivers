@@ -26,6 +26,7 @@ val descriptions: Map < String, String > = mapOf(
 
 allprojects {
     group = "de.fhg.aisec.ids"
+    version = "${rootProject.ext["idscp2"]}"
 
     repositories {
         mavenCentral()

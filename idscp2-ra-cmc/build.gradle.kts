@@ -4,8 +4,6 @@ import com.google.protobuf.gradle.plugins
 import com.google.protobuf.gradle.protobuf
 import com.google.protobuf.gradle.protoc
 
-version = "0.8.0"
-
 apply(plugin = "java")
 apply(plugin = "com.google.protobuf")
 apply(plugin = "idea")
