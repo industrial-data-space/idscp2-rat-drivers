@@ -5,11 +5,19 @@ plugins {
     java
     signing
     `maven-publish`
-    id("com.google.protobuf") version "0.8.16"
-    id("org.jetbrains.kotlin.jvm") version "1.5.20"
+    id("com.google.protobuf") version "0.8.18"
+    id("org.jetbrains.kotlin.jvm") version "1.6.0"
     id("com.diffplug.spotless") version "5.11.0"
     id("com.github.jk1.dependency-license-report") version "1.16"
 }
+
+ext["idscp2"] = "0.8.0"
+ext["kotlin"] = "1.6.0"
+ext["coroutinesVersion"] = "1.5.2"
+ext["grpcVersion"] = "1.42.1"
+ext["protobufVersion"] = "3.19.1"
+ext["grpcKotlinVersion"] = "1.2.0"
+ext["slf4j"] = "1.7.30"
 
 val descriptions: Map < String, String > = mapOf(
     "idscp2-rat-tpm2d" to "IDSCP2 TPM 2.0 Remote Attestation Driver",
@@ -58,9 +66,9 @@ subprojects {
 
     dependencies {
         // Logging API
-        api("org.slf4j", "slf4j-api", "1.7.30")
-        api("de.fhg.aisec.ids", "idscp2", "0.6.0")
-        api("org.jetbrains.kotlin", "kotlin-stdlib-jdk8", "1.5.20")
+        api("org.slf4j", "slf4j-api", "${rootProject.ext["slf4j"]}")
+        api("de.fhg.aisec.ids", "idscp2", "${rootProject.ext["idscp2"]}")
+        api("org.jetbrains.kotlin", "kotlin-stdlib-jdk8", "${rootProject.ext["kotlin"]}")
     }
 
     tasks.withType<KotlinCompile> {

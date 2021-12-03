@@ -19,26 +19,31 @@
  */
 package de.fhg.aisec.ids.cmc.prover
 
-import com.google.gson.Gson
 import de.fhg.aisec.ids.cmc.CmcException
-import de.fhg.aisec.ids.cmc.CmcSocket
-import de.fhg.aisec.ids.cmc.messages.AttestationResult
+import de.fhg.aisec.ids.cmcinterface.AttestationRequest
+import de.fhg.aisec.ids.cmcinterface.AttestationResponse
+import de.fhg.aisec.ids.cmcinterface.CMCServiceGrpcKt
+import de.fhg.aisec.ids.cmcinterface.Status
+import de.fhg.aisec.ids.cmcinterface.VerificationResponse
 import de.fhg.aisec.ids.idscp2.idscp_core.drivers.RaProverDriver
 import de.fhg.aisec.ids.idscp2.idscp_core.fsm.InternalControlMessage
 import de.fhg.aisec.ids.idscp2.idscp_core.fsm.fsmListeners.RaProverFsmListener
+import io.grpc.ManagedChannelBuilder
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.TimeUnit
 
 /**
  * A CMC RaProver Driver implementation that proves its identity to a remote peer using CMC
  *
  * @author Leon Beckmann (leon.beckmann@aisec.fraunhofer.de)
  */
+@Suppress("unused")
 class CmcProver(fsmListener: RaProverFsmListener) : RaProverDriver<CmcProverConfig>(fsmListener) {
     private val queue: BlockingQueue<ByteArray> = LinkedBlockingQueue()
     private lateinit var config: CmcProverConfig
-    private val gson = Gson()
 
     override fun setConfig(config: CmcProverConfig) {
         this.config = config
@@ -110,34 +115,38 @@ class CmcProver(fsmListener: RaProverFsmListener) : RaProverDriver<CmcProverConf
                 LOG.debug("Got rat challenge from rat verifier. Starting communication...")
             }
 
-            val resultBytes: ByteArray
-            CmcSocket(config.cmcHost, config.cmcPort).use { cmcSocket ->
-                resultBytes = cmcSocket.request(ratVerifierMsg)
+            val attestationResponse: AttestationResponse
+            runBlocking {
+                val channel = ManagedChannelBuilder.forAddress(config.cmcHost, config.cmcPort).usePlaintext().build()
+                attestationResponse = CMCServiceGrpcKt.CMCServiceCoroutineStub(channel).attest(
+                    AttestationRequest.parseFrom(ratVerifierMsg)
+                )
+                channel.shutdown().awaitTermination(5, TimeUnit.SECONDS)
             }
+
             if (LOG.isDebugEnabled) {
                 LOG.debug("Got CMC response, send response to verifier")
             }
-            fsmListener.onRaProverMessage(InternalControlMessage.RA_PROVER_MSG, resultBytes)
+            fsmListener.onRaProverMessage(InternalControlMessage.RA_PROVER_MSG, attestationResponse.toByteArray())
 
             // wait for result
             if (LOG.isDebugEnabled) {
                 LOG.debug("Wait for RAT result from RAT verifier")
             }
-            val ratResultJson = String(waitForVerifierMsg())
+            val verificationResponse = VerificationResponse.parseFrom(waitForVerifierMsg())
             if (LOG.isTraceEnabled) {
-                LOG.trace(ratResultJson)
+                LOG.trace(verificationResponse.toString())
             }
-            val ratResult = gson.fromJson(ratResultJson, AttestationResult::class.java)
 
             // notify fsm
-            if (ratResult.result) {
+            if (verificationResponse.status == Status.OK) {
                 if (LOG.isDebugEnabled) {
-                    LOG.debug("CMC attestation succeed")
+                    LOG.debug("Prover: CMC attestation succeed")
                 }
                 fsmListener.onRaProverMessage(InternalControlMessage.RA_PROVER_OK)
             } else {
                 if (LOG.isWarnEnabled) {
-                    LOG.warn("CMC attestation failed")
+                    LOG.warn("Prover: CMC attestation failed")
                 }
                 fsmListener.onRaProverMessage(InternalControlMessage.RA_PROVER_FAILED)
             }
