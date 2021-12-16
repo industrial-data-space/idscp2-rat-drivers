@@ -20,8 +20,9 @@
 package de.fhg.aisec.ids.cmc.prover
 
 import de.fhg.aisec.ids.cmc.CmcException
+import de.fhg.aisec.ids.cmc.CmcHelper.GSON
+import de.fhg.aisec.ids.cmc.json.VerificationResult
 import de.fhg.aisec.ids.cmcinterface.AttestationRequest
-import de.fhg.aisec.ids.cmcinterface.AttestationResponse
 import de.fhg.aisec.ids.cmcinterface.CMCServiceGrpcKt
 import de.fhg.aisec.ids.cmcinterface.Status
 import de.fhg.aisec.ids.cmcinterface.VerificationResponse
@@ -31,6 +32,7 @@ import de.fhg.aisec.ids.idscp2.idscp_core.fsm.fsmListeners.RaProverFsmListener
 import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
@@ -115,19 +117,22 @@ class CmcProver(fsmListener: RaProverFsmListener) : RaProverDriver<CmcProverConf
                 LOG.debug("Got rat challenge from rat verifier. Starting communication...")
             }
 
-            val attestationResponse: AttestationResponse
-            runBlocking {
+            val attestationResponse = runBlocking {
                 val channel = ManagedChannelBuilder.forAddress(config.cmcHost, config.cmcPort).usePlaintext().build()
-                attestationResponse = CMCServiceGrpcKt.CMCServiceCoroutineStub(channel).attest(
+                val attestationResponse = CMCServiceGrpcKt.CMCServiceCoroutineStub(channel).attest(
                     AttestationRequest.parseFrom(ratVerifierMsg)
                 )
                 channel.shutdown().awaitTermination(5, TimeUnit.SECONDS)
+                attestationResponse
             }
 
             if (LOG.isDebugEnabled) {
                 LOG.debug("Got CMC response, send response to verifier")
             }
-            fsmListener.onRaProverMessage(InternalControlMessage.RA_PROVER_MSG, attestationResponse.toByteArray())
+            fsmListener.onRaProverMessage(
+                InternalControlMessage.RA_PROVER_MSG,
+                attestationResponse.attestationReport.toByteArray()
+            )
 
             // wait for result
             if (LOG.isDebugEnabled) {
@@ -137,16 +142,26 @@ class CmcProver(fsmListener: RaProverFsmListener) : RaProverDriver<CmcProverConf
             if (LOG.isTraceEnabled) {
                 LOG.trace(verificationResponse.toString())
             }
-
             // notify fsm
             if (verificationResponse.status == Status.OK) {
-                if (LOG.isDebugEnabled) {
-                    LOG.debug("Prover: CMC attestation succeed")
+                val verificationResult = GSON.fromJson(
+                    verificationResponse.verificationResult.toString(StandardCharsets.UTF_8),
+                    VerificationResult::class.java
+                )
+                if (verificationResult.raSuccessful) {
+                    if (LOG.isDebugEnabled) {
+                        LOG.debug("Prover: CMC verification succeeded, result: {}", verificationResult)
+                    }
+                    fsmListener.onRaProverMessage(InternalControlMessage.RA_PROVER_OK)
+                } else {
+                    if (LOG.isDebugEnabled) {
+                        LOG.debug("Prover: CMC verification failed, result: {}", verificationResult)
+                    }
+                    fsmListener.onRaProverMessage(InternalControlMessage.RA_PROVER_FAILED)
                 }
-                fsmListener.onRaProverMessage(InternalControlMessage.RA_PROVER_OK)
             } else {
-                if (LOG.isWarnEnabled) {
-                    LOG.warn("Prover: CMC attestation failed")
+                if (LOG.isDebugEnabled) {
+                    LOG.debug("Prover: CMC verification request failed")
                 }
                 fsmListener.onRaProverMessage(InternalControlMessage.RA_PROVER_FAILED)
             }

@@ -22,6 +22,8 @@ package de.fhg.aisec.ids.cmc.verifier
 import com.google.protobuf.ByteString
 import de.fhg.aisec.ids.cmc.CmcException
 import de.fhg.aisec.ids.cmc.CmcHelper
+import de.fhg.aisec.ids.cmc.CmcHelper.GSON
+import de.fhg.aisec.ids.cmc.json.VerificationResult
 import de.fhg.aisec.ids.cmcinterface.AttestationRequest
 import de.fhg.aisec.ids.cmcinterface.CMCServiceGrpcKt
 import de.fhg.aisec.ids.cmcinterface.Status
@@ -33,6 +35,7 @@ import de.fhg.aisec.ids.idscp2.idscp_core.fsm.fsmListeners.RaVerifierFsmListener
 import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.BlockingQueue
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
@@ -72,13 +75,24 @@ class CmcVerifier(fsmListener: RaVerifierFsmListener) : RaVerifierDriver<CmcVeri
     private fun sendRaResult(verificationResponse: VerificationResponse) {
         fsmListener.onRaVerifierMessage(InternalControlMessage.RA_VERIFIER_MSG, verificationResponse.toByteArray())
         if (verificationResponse.status == Status.OK) {
-            if (LOG.isDebugEnabled) {
-                LOG.debug("Verifier: CMC verification succeed")
+            val verificationResult = GSON.fromJson(
+                verificationResponse.verificationResult.toString(StandardCharsets.UTF_8),
+                VerificationResult::class.java
+            )
+            if (verificationResult.raSuccessful) {
+                if (LOG.isDebugEnabled) {
+                    LOG.debug("Verifier: CMC verification succeeded, result: {}", verificationResult)
+                }
+                fsmListener.onRaVerifierMessage(InternalControlMessage.RA_VERIFIER_OK)
+            } else {
+                if (LOG.isDebugEnabled) {
+                    LOG.debug("Verifier: CMC verification failed, result: {}", verificationResult)
+                }
+                fsmListener.onRaVerifierMessage(InternalControlMessage.RA_VERIFIER_FAILED)
             }
-            fsmListener.onRaVerifierMessage(InternalControlMessage.RA_VERIFIER_OK)
         } else {
             if (LOG.isDebugEnabled) {
-                LOG.debug("Verifier: CMC verification failed")
+                LOG.debug("Verifier: CMC verification request failed")
             }
             fsmListener.onRaVerifierMessage(InternalControlMessage.RA_VERIFIER_FAILED)
         }
@@ -156,11 +170,11 @@ class CmcVerifier(fsmListener: RaVerifierFsmListener) : RaVerifierDriver<CmcVeri
                 println(verificationRequest)
             }
 
-            val verificationResponse: VerificationResponse
-            runBlocking {
+            val verificationResponse = runBlocking {
                 val channel = ManagedChannelBuilder.forAddress(config.cmcHost, config.cmcPort).usePlaintext().build()
-                verificationResponse = CMCServiceGrpcKt.CMCServiceCoroutineStub(channel).verify(verificationRequest)
+                val verificationResponse = CMCServiceGrpcKt.CMCServiceCoroutineStub(channel).verify(verificationRequest)
                 channel.shutdown().awaitTermination(5, TimeUnit.SECONDS)
+                verificationResponse
             }
 
             // Send verification response to prover

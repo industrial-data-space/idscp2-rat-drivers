@@ -14,6 +14,7 @@ plugins {
 ext["idscp2"] = "0.8.0"
 ext["kotlin"] = "1.6.0"
 ext["coroutinesVersion"] = "1.5.2"
+ext["gson"] = "2.8.9"
 ext["grpcVersion"] = "1.42.1"
 ext["protobufVersion"] = "3.19.1"
 ext["grpcKotlinVersion"] = "1.2.0"

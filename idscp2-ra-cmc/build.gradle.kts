@@ -8,10 +8,14 @@ apply(plugin = "java")
 apply(plugin = "com.google.protobuf")
 apply(plugin = "idea")
 
+version = "0.8.1"
+
 val api by configurations
 val testImplementation by configurations
 
 dependencies {
+    api("com.google.code.gson:gson:${rootProject.ext["gson"]}")
+
     api("org.jetbrains.kotlinx:kotlinx-coroutines-core:${rootProject.ext["coroutinesVersion"]}")
 
     api("io.grpc:grpc-protobuf:${rootProject.ext["grpcVersion"]}")

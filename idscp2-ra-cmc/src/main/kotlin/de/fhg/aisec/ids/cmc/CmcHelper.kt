@@ -19,10 +19,12 @@
  */
 package de.fhg.aisec.ids.cmc
 
+import com.google.gson.Gson
 import java.security.SecureRandom
 
 object CmcHelper {
     private val sr = SecureRandom()
+    val GSON = Gson()
 
     /**
      * Generate a crypto-secure random hex String of length numChars
