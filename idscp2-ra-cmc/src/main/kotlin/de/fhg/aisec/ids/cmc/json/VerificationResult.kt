@@ -1,6 +1,6 @@
 /*-
  * ========================LICENSE_START=================================
- * idscp2-rat-cmc
+ * idscp2-ra-cmc
  * %%
  * Copyright (C) 2021 Fraunhofer AISEC
  * %%
