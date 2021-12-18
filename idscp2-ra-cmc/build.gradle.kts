@@ -8,7 +8,7 @@ apply(plugin = "java")
 apply(plugin = "com.google.protobuf")
 apply(plugin = "idea")
 
-version = "0.8.1"
+version = "0.8.1.1"
 
 val api by configurations
 val testImplementation by configurations

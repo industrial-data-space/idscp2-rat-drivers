@@ -6,13 +6,13 @@ plugins {
     signing
     `maven-publish`
     id("com.google.protobuf") version "0.8.18"
-    id("org.jetbrains.kotlin.jvm") version "1.6.0"
+    id("org.jetbrains.kotlin.jvm") version "1.6.10"
     id("com.diffplug.spotless") version "5.11.0"
     id("com.github.jk1.dependency-license-report") version "1.16"
 }
 
-ext["idscp2"] = "0.8.0"
-ext["kotlin"] = "1.6.0"
+ext["idscp2"] = "0.8.1"
+ext["kotlin"] = "1.6.10"
 ext["coroutinesVersion"] = "1.5.2"
 ext["gson"] = "2.8.9"
 ext["grpcVersion"] = "1.42.1"
