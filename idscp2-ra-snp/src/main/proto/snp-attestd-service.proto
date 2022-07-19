@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+option go_package = "./snp_attestd_service";
+option java_package = "de.fhg.aisec.ids.snp";
+option java_outer_classname = "SnpAttestdProto";
+
+message ReportRequest {
+    bytes reportData = 1;
+    bool includeVcekCert = 2;
+}
+
+message ReportResponse {
+    bytes report = 1;
+    optional bytes vcekCert = 2;
+}
+
+message VerifyRequest {
+    bytes report = 1;
+    optional bytes vcekCert = 2;
+    string policies = 3;
+}
+
+message VerifyResponse {
+    bool ok = 1;
+}
+
+service SnpAttestdService {
+    rpc getReport(ReportRequest) returns (ReportResponse);
+    rpc verifyReport(VerifyRequest) returns (VerifyResponse);
+}

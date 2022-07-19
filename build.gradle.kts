@@ -22,7 +22,8 @@ ext["slf4j"] = "1.7.30"
 
 val descriptions: Map < String, String > = mapOf(
     "idscp2-ra-tpm2d" to "IDSCP2 TPM 2.0 Remote Attestation Driver",
-    "idscp2-ra-cmc" to "IDSCP2 CMC Remote Attestation Driver"
+    "idscp2-ra-cmc" to "IDSCP2 CMC Remote Attestation Driver",
+    "idscp2-ra-snp" to "IDSCP2 SEV-SNP Remote Attestation Driver",
 )
 
 allprojects {

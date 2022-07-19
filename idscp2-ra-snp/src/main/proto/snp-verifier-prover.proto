@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option java_package = "de.fhg.aisec.ids.snp";
+option java_outer_classname = "SnpVerifierProverProto";
+
+// This file contains the protobuf specification for the messages exchanged between the SNP Verifier and Prover
+
+// Messages that my be sent by the verifier
+
+message VerifierChallenge {
+    bytes nonce = 1;
+}
+
+message VerifierResult {
+    bool ok = 1;
+}
+
+// Messages sent by the Prover
+
+message ProverResponse {
+    bytes report = 1;
+    bytes vcek = 2;
+}
