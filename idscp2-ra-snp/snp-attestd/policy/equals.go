@@ -7,6 +7,9 @@ import (
 	ar "github.com/industrial-data-space/idscp2-rat-drivers/idscp2-ra-snp/snp-attestd/attestation_report"
 )
 
+// The Equals policy ensures, that a field of the attestation report contains a reference value.
+// The field is compared as a little-endian encoded byte array.
+// This policy is usefull for static fields like the launch measurement or report data.
 type Equals struct {
 	Field          string `json:"field"`
 	ReferenceValue []byte `json:"referenceValue"`

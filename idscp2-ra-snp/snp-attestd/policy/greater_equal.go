@@ -8,6 +8,13 @@ import (
 	ar "github.com/industrial-data-space/idscp2-rat-drivers/idscp2-ra-snp/snp-attestd/attestation_report"
 )
 
+// The GreaterEqual policy ensures, that a field of the attestation report is greater or equal to a
+// minimum value.
+// The field and minimum value are both interpreted as little-endian encoded byte arrays. 
+// The values are then converted to big endian and compared lexicographically.
+// This way, the order of numeric data is preserved.
+// This policy is usefull for fields containing versions like the GUEST_SVN field.
+// For TCB versions, use the TcbGreaterEqual policy.
 type GreaterEqual struct {
 	Field        string `json:"field"`
 	MinimumValue []byte `json:"minimumValue"`

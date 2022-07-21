@@ -8,6 +8,10 @@ import (
 	ar "github.com/industrial-data-space/idscp2-rat-drivers/idscp2-ra-snp/snp-attestd/attestation_report"
 )
 
+// The TcbGreaterEqual policy ensures, that a TCB-version field of the attestation report contains
+// at least the specified version.
+// A report is accepted, if each component of the selected field is greater or equal to its
+// correspoding reference value.
 type TcbGreaterEqual struct {
 	Field         string `json:"field"`
 	MinBootloader uint8  `json:"minBootloaderVersion"`

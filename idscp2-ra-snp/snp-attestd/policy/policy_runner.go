@@ -8,6 +8,7 @@ import (
 	ar "github.com/industrial-data-space/idscp2-rat-drivers/idscp2-ra-snp/snp-attestd/attestation_report"
 )
 
+// A function that can construct a policy instance from its parameters encoded as json.
 type PolicyFactory func(params json.RawMessage) (Policy, error)
 
 var registeredPolicies = map[string]PolicyFactory{
@@ -17,6 +18,9 @@ var registeredPolicies = map[string]PolicyFactory{
 	"tcbGreaterEqual": TcbGreaterEqualFactory,
 }
 
+// Register a new policy to be recognized by the policy runner.
+// A policy is identified by a name and then constructed from its parameters using a policy
+// factory.
 func RegisterPolicy(name string, factory PolicyFactory) {
 	registeredPolicies[name] = factory
 }
@@ -28,11 +32,14 @@ type policyJson struct {
 	Params     json.RawMessage `json:"params"`
 }
 
+// The PolicyWrapper struct is used to associate a policy with its Id.
+// If the policy has no Id, it is omitted.
 type PolicyWrapper struct {
 	Id      string
 	Wrapped Policy
 }
 
+// Parse an array of policies encoded as json.
 func ParsePolicies(encoded []byte) ([]PolicyWrapper, error) {
 	var rawPolicies []policyJson
 	err := json.Unmarshal(encoded, &rawPolicies)
@@ -65,6 +72,10 @@ func ParsePolicies(encoded []byte) ([]PolicyWrapper, error) {
 	return wrappers, nil
 }
 
+// Check if an attestation report conforms to a set of policies.
+// The report is rejected, if a single policy is not satisfied by the attestation report.
+// For each failed policy, a string giving the reason for failure is returned.
+// If an error is encountered, policy checking is halted and the error returned.
 func CheckPolicies(
 	policies []PolicyWrapper,
 	ar *ar.AttestationReport,

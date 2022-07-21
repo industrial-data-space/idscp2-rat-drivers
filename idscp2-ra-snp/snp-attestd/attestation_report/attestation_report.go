@@ -59,6 +59,9 @@ type AttestationReport struct {
 // https://www.amd.com/system/files/TechDocs/56860.pdf, Table 21
 const signatureOffset = 0x2a0
 
+// Verify the signature of an attestation report against a VCEK certificate.
+// In order to avoid re-encoding the attestationn report, the raw report is also passed to this
+// function.
 func (a *AttestationReport) VerifySignature(rawReport []byte, vcekCert *x509.Certificate) (bool, error) {
 	if len(rawReport) < signatureOffset {
 		return false, fmt.Errorf("the data passed as the raw report is too small")
