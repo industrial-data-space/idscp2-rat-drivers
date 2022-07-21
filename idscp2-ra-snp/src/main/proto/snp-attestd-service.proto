@@ -11,12 +11,12 @@ message ReportRequest {
 
 message ReportResponse {
     bytes report = 1;
-    optional bytes vcekCert = 2;
+    bytes vcekCert = 2;
 }
 
 message VerifyRequest {
     bytes report = 1;
-    optional bytes vcekCert = 2;
+    bytes vcekCert = 2;
     string policies = 3;
 }
 
