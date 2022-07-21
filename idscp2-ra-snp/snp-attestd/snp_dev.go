@@ -68,6 +68,7 @@ const reportRespSize = unsafe.Sizeof(reportResp{})
 const snpGetReportIoctl = 0xc0205300
 
 // Obtain an attestation report from the SEV firmware containing the specified reportData.
+// This function wraps the SNP_GET_REPORT IOCTL on the SEV-SNP guest device.
 func (dev *SnpDevice) GetReport(reportData []byte) (ar.AttestationReport, error) {
 	if len(reportData) > 64 {
 		return ar.AttestationReport{}, fmt.Errorf("expected up to 64 bytes of report data. Got %d bytes", len(reportData))

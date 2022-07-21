@@ -24,6 +24,7 @@ var (
 	errServer = errors.New("internal server error")
 )
 
+// The implementation of the snp-attestd grpc service.
 type AttestdServiceImpl struct {
 	config Config
 	dev    *SnpDevice
@@ -31,6 +32,9 @@ type AttestdServiceImpl struct {
 	pb.UnimplementedSnpAttestdServiceServer
 }
 
+// Construct a new instance of the snp-attestd service implementation.
+// When not running in verify only mode, this function requires the SEV-SNP guest device
+// to be available with read-write permissions.
 func NewAttestdServiceImpl(config Config) (*AttestdServiceImpl, error) {
 	var dev *SnpDevice
 	var err error
@@ -50,6 +54,7 @@ func NewAttestdServiceImpl(config Config) (*AttestdServiceImpl, error) {
 	return &service, nil
 }
 
+// Get the VCEK certificate's path in the cache directory.
 func (s *AttestdServiceImpl) getVcekCertPath(report ar.AttestationReport) (string, error) {
 	// Each certificate is identified by the chip id and reported TCB value of the system.
 	// Both values can be found in the attestation report
@@ -72,6 +77,7 @@ func (s *AttestdServiceImpl) getVcekCertPath(report ar.AttestationReport) (strin
 	return pathBuilder.String(), nil
 }
 
+// Try to load a VCEK certificate from cache and fetch it from AMD if not found.
 func (s *AttestdServiceImpl) getVcekCert(report ar.AttestationReport) ([]byte, error) {
 	filePath, err := s.getVcekCertPath(report)
 	if err != nil {
@@ -117,6 +123,8 @@ func (s *AttestdServiceImpl) getVcekCert(report ar.AttestationReport) ([]byte, e
 	return certData, nil
 }
 
+// Load the certificate chain from the cache directory.
+// Note that the certificates are not automatically fetched from the AMD KDC if not found.
 func (s *AttestdServiceImpl) loadCertChain() (ask *x509.Certificate, ark *x509.Certificate, err error) {
 	askPath := path.Join(s.config.CacheDir, "ask.crt")
 	arkPath := path.Join(s.config.CacheDir, "ark.crt")
@@ -164,6 +172,10 @@ func (s *AttestdServiceImpl) loadCertChain() (ask *x509.Certificate, ark *x509.C
 
 // Implementation of the grpc interface
 
+// The GetReport grpc endpoint.
+// This function returns an SEV-SNP attestation report containing the requested report data.
+// If requested, the function also returns a VCEK certificate for the attestation report.
+// If the service is running in verify only mode, this function will always fail.
 func (s *AttestdServiceImpl) GetReport(ctx context.Context, reportRequest *pb.ReportRequest) (*pb.ReportResponse, error) {
 	if s.config.VerifyOnly {
 		log.Debug("Got report request while in verify only mode. Ignoring.")
@@ -207,6 +219,11 @@ func (s *AttestdServiceImpl) GetReport(ctx context.Context, reportRequest *pb.Re
 	return &response, nil
 }
 
+// The VerifyReport grpc endpoint.
+// This function verifies an SEV-SNP attestation report against its VCEK certificate and by extension
+// the AMD root certificate.
+// The endpoint also accepts a set of policy objects that constrain the field values of the attestation report.
+// This function does not require the SEV device and therefore work in verify only mode.
 func (s *AttestdServiceImpl) VerifyReport(ctx context.Context, verifyRequest *pb.VerifyRequest) (*pb.VerifyResponse, error) {
 	log.Debug("Got Verify Request")
 	if log.LogLevel >= log.LogTrace {

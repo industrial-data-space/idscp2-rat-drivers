@@ -33,6 +33,10 @@ const (
 	maxTries = 6
 )
 
+// Fetch the VCEK certificate for the given attestation report.
+// The certificate is used to verify the signature of the report.
+// As the AMD KDC only allows one request every 10 seconds, the return value of this function
+// should be cached.
 func FetchVcekCertForReport(report ar.AttestationReport) ([]byte, error) {
 	chipId := hex.EncodeToString(report.ChipId[:])
 	tcb := ar.DecodeTcbVersion(report.ReportedTcb)
@@ -70,6 +74,9 @@ func FetchVcekCertForReport(report ar.AttestationReport) ([]byte, error) {
 	return []byte{}, fmt.Errorf("maximum number of attempts exceeded")
 }
 
+// Verify the certificate extensions of the VCEK certificate.
+// Each VCEK certificate contains extensions matching the chip ID and reported TCB versions of
+// the corresponding attestation report.
 func VerifyVcekCertificateExtensions(vcekCert *x509.Certificate, report ar.AttestationReport) bool {
 	knownExtensions := make(map[string]interface{}, 5)
 	tcb := ar.DecodeTcbVersion(report.ReportedTcb)
@@ -111,6 +118,9 @@ func VerifyVcekCertificateExtensions(vcekCert *x509.Certificate, report ar.Attes
 	return true
 }
 
+// Fetch the VCEK certificate chain from the AMD KDC.
+// The chain consists of the AMD Signing Key (ASK) and the AMD Root Key (ARK).
+// Each VCEK is signed by the ASK, which is in turn signed by the ARK.
 func FetchVcekCertChain() (askCert []byte, arkCert []byte, err error) {
 	resp, err := http.Get(certChainUrl)
 	if err != nil {
