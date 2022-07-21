@@ -31,9 +31,6 @@ val generatedProtoBaseDir = "$projectDir/generated"
 
 protobuf {
     generatedFilesBaseDir = generatedProtoBaseDir
-    protoc {
-        artifact = "com.google.protobuf:protoc:${versions["protobuf"]}"
-    }
     plugins {
         id("grpc") {
             artifact = "io.grpc:protoc-gen-grpc-java:${versions["grpc"]}"
