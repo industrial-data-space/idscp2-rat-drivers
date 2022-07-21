@@ -230,7 +230,7 @@ func (s *AttestdServiceImpl) VerifyReport(ctx context.Context, verifyRequest *pb
 	if len(verifyRequest.VcekCert) != 0 {
 		vcekBytes = verifyRequest.VcekCert
 	} else {
-		vcekBytes, err = FetchVcekCertForReport(report)
+		vcekBytes, err = s.getVcekCert(report)
 		if err != nil {
 			log.Err("Could not fetch VCEK certificate: %v", err)
 			return nil, errServer
