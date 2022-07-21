@@ -38,8 +38,18 @@ func (p *GreaterEqual) CheckReport(ar *ar.AttestationReport) (ok bool, reason st
 		return
 	}
 
-	// If the field value is less than th reference value
-	if bytes.Compare(field, p.MinimumValue) < 0 {
+	var minimumValue []byte
+	copy(minimumValue, p.MinimumValue)
+
+	// Reverse the byte order of the field and minimum value
+	// Since we already checked that both have the same length, we can use one loop.
+	for i := 0; i < len(field)/2; i++ {
+		field[i], field[len(field)-i-1] = field[len(field)-i-1], field[i]
+		minimumValue[i], minimumValue[len(field)-i-1] = minimumValue[len(field)-i-1], minimumValue[i]
+	}
+
+	// If the field value is less than the reference value.
+	if bytes.Compare(field, minimumValue) < 0 {
 		ok = false
 		reason = fmt.Sprintf(
 			"The value of %s was less than the minimum acceptable value.",
