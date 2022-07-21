@@ -2,6 +2,8 @@ package attestation_report
 
 import "encoding/binary"
 
+// The non-reserved fields of the TCB version struct defined in
+// https://www.amd.com/system/files/TechDocs/56860.pdf, Table 3
 type TcbVersion struct {
 	BootLoader uint8
 	Tee        uint8
@@ -10,6 +12,7 @@ type TcbVersion struct {
 	Microcode uint8
 }
 
+// Decode a TCB version from the raw value obtained from the attestation report.
 func DecodeTcbVersion(raw uint64) TcbVersion {
 	var tcb TcbVersion
 	bytes := [8]byte{}
