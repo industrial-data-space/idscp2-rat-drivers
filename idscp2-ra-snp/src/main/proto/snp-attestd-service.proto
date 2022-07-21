@@ -5,26 +5,38 @@ option java_package = "de.fhg.aisec.ids.snp";
 option java_outer_classname = "SnpAttestdProto";
 
 message ReportRequest {
+    // Up to 64 bytes of data to include in the attestation report.
+    // If less than 64 bytes are passed, the remaining bytes are set to zero.
     bytes reportData = 1;
+    // If set to true, snp-attestd also returns the report's VCEK certificate.
     bool includeVcekCert = 2;
 }
 
 message ReportResponse {
+    // The attestation report containing the requested report data.
     bytes report = 1;
+    // The DER-encoded VCEK certificate, if includeVcekCert was set to true in the request.
     bytes vcekCert = 2;
 }
 
 message VerifyRequest {
+    // The report to verify
     bytes report = 1;
+    // The DER-encoded VCEK certificate for the report.
+    // If omitted, the VCEK certificate is fetched by snp-attestd.
     bytes vcekCert = 2;
+    // A JSON-encoded list of policies to check the report against.
     string policies = 3;
 }
 
 message VerifyResponse {
+    // Set to true, if the report's integrity could be verified and if it conforms to the policies.
     bool ok = 1;
 }
 
 service SnpAttestdService {
+    // Get an attestation report from snp-attestd.
     rpc getReport(ReportRequest) returns (ReportResponse);
+    // Verifies an attestation report.
     rpc verifyReport(VerifyRequest) returns (VerifyResponse);
 }
