@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"reflect"
+	"strings"
+
 	ar "github.com/industrial-data-space/idscp2-rat-drivers/idscp2-ra-snp/snp-attestd/attestation_report"
 )
 
@@ -29,7 +31,7 @@ func (f fieldSelector) Select(ar *ar.AttestationReport) []byte {
 // Build a table of field selectors for the attestation report struct in
 // "../attestation_report.go".
 // This function uses reflection to iterate over the attestation report and builds a lookup
-// function for each field that has a `fieldName` tag.
+// function for each field that has a `json` tag.
 // This way, only the type has to be kept in sync with the AMD docs while the lookup table updates
 // automatically.
 func buildFieldSelectorTable() map[string](fieldSelector) {
@@ -42,14 +44,17 @@ func buildFieldSelectorTable() map[string](fieldSelector) {
 		// Skip the field if it does not have a fieldName tag
 		// The fileName tag maps the go field to the field name given in
 		// https://www.amd.com/system/files/TechDocs/56860.pdf, Table 21
-		tag, ok := field.Tag.Lookup("fieldName")
+		tag, ok := field.Tag.Lookup("json")
 		if !ok {
 			continue
 		}
 
+		// If someone added an extra argument to the json tag, make sure to only use the field name.
+		fieldName, _, _ := strings.Cut(tag, ",")
+
 		// Save the index of the field
 		// This can later be used to obtain the field value from an attestation report
-		result[tag] = fieldSelector(i)
+		result[fieldName] = fieldSelector(i)
 	}
 
 	return result

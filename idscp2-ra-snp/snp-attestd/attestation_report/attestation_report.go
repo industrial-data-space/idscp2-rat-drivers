@@ -11,43 +11,43 @@ import (
 // Attestation report structure
 // This type reflects the AMD SEV-SNP attestation report as described in
 // https://www.amd.com/system/files/TechDocs/56860.pdf, Table 21.
-// Where applicable, the original field names are appended to each field using the fieldName tag.
-// Copied from:
+// Where applicable, the original field names are appended to each field using json tags.
+// Adapted from:
 // https://github.com/Fraunhofer-AISEC/cmc/blob/05cbe115e9edca9152e7d0ec305d70ef7c277803/attestationreport/snp.go
 type AttestationReport struct {
 	// Table 21 @ https://www.amd.com/system/files/TechDocs/56860.pdf
-	Version         uint32   `fieldName:"VERSION"`
-	GuestSvn        uint32   `fieldName:"GUEST_SVN"`
-	Policy          uint64   `fieldName:"POLICY"`
-	FamilyId        [16]byte `fieldName:"FAMILY_ID"`
-	ImageId         [16]byte `fieldName:"IMAGE_ID"`
-	Vmpl            uint32   `fieldName:"VMPL"`
-	SignatureAlgo   uint32   `fieldName:"SIGNATURE_ALGO"`
-	CurrentTcb      uint64   `fieldName:"CURRENT_TCB"` // platform_version
-	PlatformInfo    uint64   `fieldName:"PLATFORM_INFO"`
-	AuthorKeyEn     uint32   `fieldName:"AUTHOR_KEY_EN"`
+	Version         uint32   `json:"VERSION"`
+	GuestSvn        uint32   `json:"GUEST_SVN"`
+	Policy          uint64   `json:"POLICY"`
+	FamilyId        [16]byte `json:"FAMILY_ID"`
+	ImageId         [16]byte `json:"IMAGE_ID"`
+	Vmpl            uint32   `json:"VMPL"`
+	SignatureAlgo   uint32   `json:"SIGNATURE_ALGO"`
+	CurrentTcb      uint64   `json:"CURRENT_TCB"` // platform_version
+	PlatformInfo    uint64   `json:"PLATFORM_INFO"`
+	AuthorKeyEn     uint32   `json:"AUTHOR_KEY_EN"`
 	Reserved1       uint32
-	ReportData      [64]byte `fieldName:"REPORT_DATA"`
-	Measurement     [48]byte `fieldName:"MEASUREMENT"`
-	HostData        [32]byte `fieldName:"HOST_DATA"`
-	IdKeyDigest     [48]byte `fieldName:"ID_KEY_DIGEST"`
-	AuthorKeyDigest [48]byte `fieldName:"AUTHOR_KEY_DIGEST"`
-	ReportId        [32]byte `fieldName:"REPORT_ID"`
-	ReportIdMa      [32]byte `fieldName:"REPORT_ID_MA"`
-	ReportedTcb     uint64   `fieldName:"REPORTED_TCB"`
+	ReportData      [64]byte `json:"REPORT_DATA"`
+	Measurement     [48]byte `json:"MEASUREMENT"`
+	HostData        [32]byte `json:"HOST_DATA"`
+	IdKeyDigest     [48]byte `json:"ID_KEY_DIGEST"`
+	AuthorKeyDigest [48]byte `json:"AUTHOR_KEY_DIGEST"`
+	ReportId        [32]byte `json:"REPORT_ID"`
+	ReportIdMa      [32]byte `json:"REPORT_ID_MA"`
+	ReportedTcb     uint64   `json:"REPORTED_TCB"`
 	Reserved2       [24]byte
-	ChipId          [64]byte `fieldName:"CHIP_ID"`
+	ChipId          [64]byte `json:"CHIP_ID"`
 	//Reserved3 [192]byte
-	CommittedTcb   uint64 `fieldName:"COMMITTED_TCB"`
-	CurrentBuild   uint8  `fieldName:"CURRENT_BUILD"`
-	CurrentMinor   uint8  `fieldName:"CURRENT_MINOR"`
-	CurrentMajor   uint8  `fieldName:"CURRENT_MAJOR"`
+	CommittedTcb   uint64 `json:"COMMITTED_TCB"`
+	CurrentBuild   uint8  `json:"CURRENT_BUILD"`
+	CurrentMinor   uint8  `json:"CURRENT_MINOR"`
+	CurrentMajor   uint8  `json:"CURRENT_MAJOR"`
 	Reserved3a     uint8
-	CommittedBuild uint8 `fieldName:"COMMITTED_BUILD"`
-	CommittedMinor uint8 `fieldName:"COMMITTED_MINOR"`
-	CommittedMajor uint8 `fieldName:"COMMITTED_MAJOR"`
+	CommittedBuild uint8 `json:"COMMITTED_BUILD"`
+	CommittedMinor uint8 `json:"COMMITTED_MINOR"`
+	CommittedMajor uint8 `json:"COMMITTED_MAJOR"`
 	Reserved3b     uint8
-	LaunchTcb      uint64 `fieldName:"LAUNCH_TCB"`
+	LaunchTcb      uint64 `json:"LAUNCH_TCB"`
 	Reserved3c     [168]byte
 	// Table 23 @ https://www.amd.com/system/files/TechDocs/56860.pdf
 	SignatureR [72]byte
