@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,11 +17,11 @@
  * limitations under the License.
  * =========================LICENSE_END==================================
  */
-package de.fhg.aisec.ids.tpm2d.tpm2d_verifier
+package de.fhg.aisec.ids.tpm2d.verifier
 
-import de.fhg.aisec.ids.idscp2.idscp_core.drivers.RaVerifierDriver
-import de.fhg.aisec.ids.idscp2.idscp_core.fsm.InternalControlMessage
-import de.fhg.aisec.ids.idscp2.idscp_core.fsm.fsmListeners.RaVerifierFsmListener
+import de.fhg.aisec.ids.idscp2.core.drivers.RaVerifierDriver
+import de.fhg.aisec.ids.idscp2.core.fsm.InternalControlMessage
+import de.fhg.aisec.ids.idscp2.core.fsm.fsmListeners.RaVerifierFsmListener
 import de.fhg.aisec.ids.tpm2d.TpmException
 import de.fhg.aisec.ids.tpm2d.TpmHelper
 import de.fhg.aisec.ids.tpm2d.TpmMessageFactory
@@ -131,7 +131,9 @@ class TpmVerifier(fsmListener: RaVerifierFsmListener) : RaVerifierDriver<TpmVeri
 
             // send challenge to TPM prover
             val ratChallenge = TpmMessageFactory.getAttestationChallengeMessage(
-                nonce, config.expectedAType, config.expectedAttestationMask
+                nonce,
+                config.expectedAType,
+                config.expectedAttestationMask
             ).toByteArray()
             fsmListener.onRaVerifierMessage(InternalControlMessage.RA_VERIFIER_MSG, ratChallenge)
 
@@ -177,7 +179,6 @@ class TpmVerifier(fsmListener: RaVerifierFsmListener) : RaVerifierDriver<TpmVeri
     }
 
     private fun checkPcrValues(response: TpmResponse): Boolean {
-
         try {
             // parse pcr from response
             val pcrValues = PcrValues(response.pcrValuesList)
@@ -220,12 +221,11 @@ class TpmVerifier(fsmListener: RaVerifierFsmListener) : RaVerifierDriver<TpmVeri
             val rootCertificates = config.caCertificates
 
             // find the used issuer
-            val certificateIssuer = certificate.issuerDN.name
+            val certificateIssuer = certificate.issuerX500Principal.name
 
             var trusted = false
             for (caCert in rootCertificates) {
-                if (caCert.subjectDN.name == certificateIssuer) {
-
+                if (caCert.subjectX500Principal.name == certificateIssuer) {
                     // Verify the TPM certificate
                     try {
                         certificate.verify(caCert.publicKey)

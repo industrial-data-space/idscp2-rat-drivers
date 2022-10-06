@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,9 +29,9 @@ import de.fhg.aisec.ids.cmcinterface.CMCServiceGrpcKt
 import de.fhg.aisec.ids.cmcinterface.Status
 import de.fhg.aisec.ids.cmcinterface.VerificationRequest
 import de.fhg.aisec.ids.cmcinterface.VerificationResponse
-import de.fhg.aisec.ids.idscp2.idscp_core.drivers.RaVerifierDriver
-import de.fhg.aisec.ids.idscp2.idscp_core.fsm.InternalControlMessage
-import de.fhg.aisec.ids.idscp2.idscp_core.fsm.fsmListeners.RaVerifierFsmListener
+import de.fhg.aisec.ids.idscp2.core.drivers.RaVerifierDriver
+import de.fhg.aisec.ids.idscp2.core.fsm.InternalControlMessage
+import de.fhg.aisec.ids.idscp2.core.fsm.fsmListeners.RaVerifierFsmListener
 import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
