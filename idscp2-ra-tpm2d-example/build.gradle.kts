@@ -1,22 +1,20 @@
-version = "0.6.0"
-
 apply(plugin = "java")
 
 val api by configurations
 val testImplementation by configurations
 
 dependencies {
-    api(project(":idscp2-ra-tpm2d"))
+    implementation(project(":idscp2-ra-tpm2d"))
 
-    api("org.slf4j", "slf4j-simple", "1.7.30")
+    implementation(libs.slf4j.simple)
 }
 
-task("TpmExampleServer", JavaExec::class) {
+task("tpmExampleServer", JavaExec::class) {
     mainClass.set("de.fhg.aisec.ids.tpm2d.example.RunIdscp2Server")
     classpath = sourceSets["main"].runtimeClasspath
 }
 
-task("TpmExampleClient", JavaExec::class) {
+task("tpmExampleClient", JavaExec::class) {
     mainClass.set("de.fhg.aisec.ids.tpm2d.example.RunIdscp2Client")
     classpath = sourceSets["main"].runtimeClasspath
 }

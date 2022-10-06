@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,23 +19,23 @@
  */
 package de.fhg.aisec.ids.tpm2d.tests
 
-import de.fhg.aisec.ids.idscp2.default_drivers.daps.null_daps.NullDaps
-import de.fhg.aisec.ids.idscp2.default_drivers.secure_channel.tlsv1_3.NativeTLSDriver
-import de.fhg.aisec.ids.idscp2.default_drivers.secure_channel.tlsv1_3.NativeTlsConfiguration
-import de.fhg.aisec.ids.idscp2.idscp_core.api.Idscp2EndpointListener
-import de.fhg.aisec.ids.idscp2.idscp_core.api.configuration.AttestationConfig
-import de.fhg.aisec.ids.idscp2.idscp_core.api.configuration.Idscp2Configuration
-import de.fhg.aisec.ids.idscp2.idscp_core.api.idscp_connection.Idscp2Connection
-import de.fhg.aisec.ids.idscp2.idscp_core.api.idscp_connection.Idscp2ConnectionImpl
-import de.fhg.aisec.ids.idscp2.idscp_core.api.idscp_server.Idscp2Server
-import de.fhg.aisec.ids.idscp2.idscp_core.api.idscp_server.Idscp2ServerFactory
-import de.fhg.aisec.ids.idscp2.idscp_core.ra_registry.RaProverDriverRegistry
-import de.fhg.aisec.ids.idscp2.idscp_core.ra_registry.RaVerifierDriverRegistry
+import de.fhg.aisec.ids.idscp2.core.api.Idscp2EndpointListener
+import de.fhg.aisec.ids.idscp2.core.api.configuration.AttestationConfig
+import de.fhg.aisec.ids.idscp2.core.api.configuration.Idscp2Configuration
+import de.fhg.aisec.ids.idscp2.core.api.connection.Idscp2Connection
+import de.fhg.aisec.ids.idscp2.core.api.connection.Idscp2ConnectionImpl
+import de.fhg.aisec.ids.idscp2.core.api.server.Idscp2Server
+import de.fhg.aisec.ids.idscp2.core.api.server.Idscp2ServerFactory
+import de.fhg.aisec.ids.idscp2.core.raregistry.RaProverDriverRegistry
+import de.fhg.aisec.ids.idscp2.core.raregistry.RaVerifierDriverRegistry
+import de.fhg.aisec.ids.idscp2.defaultdrivers.daps.nulldaps.NullDaps
+import de.fhg.aisec.ids.idscp2.defaultdrivers.securechannel.tls13.NativeTLSDriver
+import de.fhg.aisec.ids.idscp2.defaultdrivers.securechannel.tls13.NativeTlsConfiguration
 import de.fhg.aisec.ids.tpm2d.messages.TpmAttestation
-import de.fhg.aisec.ids.tpm2d.tpm2d_prover.TpmProver
-import de.fhg.aisec.ids.tpm2d.tpm2d_prover.TpmProverConfig
-import de.fhg.aisec.ids.tpm2d.tpm2d_verifier.TpmVerifier
-import de.fhg.aisec.ids.tpm2d.tpm2d_verifier.TpmVerifierConfig
+import de.fhg.aisec.ids.tpm2d.prover.TpmProver
+import de.fhg.aisec.ids.tpm2d.prover.TpmProverConfig
+import de.fhg.aisec.ids.tpm2d.verifier.TpmVerifier
+import de.fhg.aisec.ids.tpm2d.verifier.TpmVerifierConfig
 import org.awaitility.Awaitility.await
 import org.junit.After
 import org.junit.Ignore
@@ -51,13 +51,13 @@ import kotlin.concurrent.thread
 
 class IntegrationTest {
 
-    private lateinit var idscp2Server: Idscp2Server<Idscp2Connection>
+    private var idscp2Server: Idscp2Server<Idscp2Connection>? = null
     private lateinit var tpmSocket: ServerSocket
 
     @After
     fun cleanup() {
         tpmSocket.close()
-        idscp2Server.terminate()
+        idscp2Server?.terminate()
         RaProverDriverRegistry.unregisterDriver(TpmProver.ID)
         RaVerifierDriverRegistry.unregisterDriver(TpmVerifier.ID)
     }
@@ -93,7 +93,6 @@ class IntegrationTest {
     @Test(timeout = 30000)
     @Ignore
     fun testIdscp2WithTpm() {
-
         // get keystore paths
         val consumerKeyStorePath = Paths.get(
             Objects.requireNonNull(
@@ -119,6 +118,8 @@ class IntegrationTest {
             .setExpectedRaSuite(arrayOf(TpmVerifier.ID))
             .build()
 
+        val defaultPassword = "password".toCharArray()
+
         // create client config
         val clientIdscp2Config = Idscp2Configuration.Builder()
             .setDapsDriver(NullDaps())
@@ -126,10 +127,13 @@ class IntegrationTest {
             .build()
 
         val clientTlsConfig = NativeTlsConfiguration.Builder()
-            .setHost("localhost")
-            .setServerPort(NativeTlsConfiguration.DEFAULT_SERVER_PORT)
             .setKeyStorePath(consumerKeyStorePath)
+            .setKeyStorePassword(defaultPassword)
+            .setKeyPassword(defaultPassword)
             .setTrustStorePath(trustStorePath)
+            .setTrustStorePassword(defaultPassword)
+            .setCertificateAlias("1.0.1")
+            .setHost("provider-core")
             .build()
 
         // create server config
@@ -139,11 +143,13 @@ class IntegrationTest {
             .build()
 
         val serverTlsConfig = NativeTlsConfiguration.Builder()
-            .setHost("localhost")
-            .setServerPort(NativeTlsConfiguration.DEFAULT_SERVER_PORT)
             .setKeyStorePath(providerKeyStorePath)
+            .setKeyStorePassword(defaultPassword)
+            .setKeyPassword(defaultPassword)
             .setTrustStorePath(trustStorePath)
-            .setServerSocketTimeout(500)
+            .setTrustStorePassword(defaultPassword)
+            .setCertificateAlias("1.0.1")
+            .setHost("provider-core")
             .build()
 
         // register RAT drivers in registry
@@ -176,7 +182,7 @@ class IntegrationTest {
             serverTlsConfig
         )
         idscp2Server = serverFactory.listen()
-        await().until { idscp2Server.isRunning }
+        await().until { idscp2Server?.isRunning }
 
         val scDriverClient = NativeTLSDriver<Idscp2Connection>()
         val connectionFuture = scDriverClient.connect(::Idscp2ConnectionImpl, clientIdscp2Config, clientTlsConfig)
@@ -190,11 +196,11 @@ class IntegrationTest {
         // wait for connection
         connectionLatch.await()
 
-        assert(idscp2Server.allConnections.size == 1)
-        val serverConnection = idscp2Server.allConnections.first()
-
-        await().until { serverConnection.isConnected && connectionFuture.get().isConnected }
-        serverConnection.close()
-        await().until { serverConnection.isClosed && connectionFuture.get().isClosed }
+        assert(idscp2Server?.allConnections?.size == 1)
+        idscp2Server?.allConnections?.first()?.let {
+            await().until { it.isConnected && connectionFuture.get().isConnected }
+            it.close()
+            await().until { it.isClosed && connectionFuture.get().isClosed }
+        }
     }
 }

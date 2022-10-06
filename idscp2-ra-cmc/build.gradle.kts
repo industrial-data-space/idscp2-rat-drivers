@@ -8,33 +8,26 @@ apply(plugin = "java")
 apply(plugin = "com.google.protobuf")
 apply(plugin = "idea")
 
-version = "0.8.1.1"
-
 val api by configurations
 val testImplementation by configurations
 
 dependencies {
-    api("com.google.code.gson:gson:${rootProject.ext["gson"]}")
-
-    api("org.jetbrains.kotlinx:kotlinx-coroutines-core:${rootProject.ext["coroutinesVersion"]}")
-
-    api("io.grpc:grpc-protobuf:${rootProject.ext["grpcVersion"]}")
-    api("com.google.protobuf:protobuf-java-util:${rootProject.ext["protobufVersion"]}")
-    api("com.google.protobuf:protobuf-kotlin:${rootProject.ext["protobufVersion"]}")
-    api("io.grpc:grpc-stub:${rootProject.ext["grpcVersion"]}")
-    api("io.grpc:grpc-kotlin-stub:${rootProject.ext["grpcKotlinVersion"]}")
+    implementation(libs.gson)
+    implementation(libs.kotlinx.coroutines)
+    implementation(libs.bundles.protobuf)
+    implementation(libs.bundles.grpc)
 }
 
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:${rootProject.ext["protobufVersion"]}"
+        artifact = "com.google.protobuf:protoc:${libs.versions.protobuf.get()}"
     }
     plugins {
         id("grpc") {
-            artifact = "io.grpc:protoc-gen-grpc-java:${rootProject.ext["grpcVersion"]}"
+            artifact = "io.grpc:protoc-gen-grpc-java:${libs.versions.grpc.get()}"
         }
         id("grpckt") {
-            artifact = "io.grpc:protoc-gen-grpc-kotlin:${rootProject.ext["grpcKotlinVersion"]}:jdk7@jar"
+            artifact = "io.grpc:protoc-gen-grpc-kotlin:${libs.versions.grpcKotlin.get()}:jdk8@jar"
         }
     }
     generateProtoTasks {

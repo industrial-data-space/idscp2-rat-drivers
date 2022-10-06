@@ -5,37 +5,34 @@ plugins {
     java
     signing
     `maven-publish`
-    id("com.google.protobuf") version "0.8.18"
-    id("org.jetbrains.kotlin.jvm") version "1.6.10"
-    id("com.diffplug.spotless") version "5.11.0"
-    id("com.github.jk1.dependency-license-report") version "1.16"
+    alias(libs.plugins.protobuf)
+    alias(libs.plugins.kotlin)
+    alias(libs.plugins.spotless)
+    alias(libs.plugins.license.report)
+    alias(libs.plugins.versions)
 }
 
-ext["idscp2"] = "0.8.1"
-ext["kotlin"] = "1.6.10"
-ext["coroutinesVersion"] = "1.5.2"
-ext["gson"] = "2.8.9"
-ext["grpcVersion"] = "1.43.0"
-ext["protobufVersion"] = "3.19.1"
-ext["grpcKotlinVersion"] = "1.2.0"
-ext["slf4j"] = "1.7.30"
-
-val descriptions: Map < String, String > = mapOf(
+val descriptions: Map<String, String> = mapOf(
     "idscp2-ra-tpm2d" to "IDSCP2 TPM 2.0 Remote Attestation Driver",
     "idscp2-ra-cmc" to "IDSCP2 CMC Remote Attestation Driver"
 )
 
 allprojects {
     group = "de.fhg.aisec.ids"
-    version = "${rootProject.ext["idscp2"]}"
+    version = rootProject.libs.versions.idscp2.get()
 
     repositories {
         mavenCentral()
     }
+
+    tasks.withType<com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask> {
+        rejectVersionIf {
+            ".*(rc-?[0-9]*|beta)$".toRegex(RegexOption.IGNORE_CASE).matches(candidate.version)
+        }
+    }
 }
 
 subprojects {
-
     apply(plugin = "java")
     apply(plugin = "kotlin")
 
@@ -67,10 +64,10 @@ subprojects {
     }
 
     dependencies {
-        // Logging API
-        api("org.slf4j", "slf4j-api", "${rootProject.ext["slf4j"]}")
-        api("de.fhg.aisec.ids", "idscp2", "${rootProject.ext["idscp2"]}")
-        api("org.jetbrains.kotlin", "kotlin-stdlib-jdk8", "${rootProject.ext["kotlin"]}")
+        implementation(rootProject.libs.slf4j.api)
+        implementation(rootProject.libs.idscp2)
+        implementation(rootProject.libs.kotlin.stdlib)
+        testImplementation(rootProject.libs.slf4j.simple)
     }
 
     tasks.withType<KotlinCompile> {
@@ -161,7 +158,7 @@ subprojects {
     spotless {
         kotlin {
             target("**/*.kt")
-            ktlint("0.41.0")
+            ktlint(libs.versions.ktlint.get())
             licenseHeader(
                 """/*-
  * ========================LICENSE_START=================================
@@ -172,9 +169,9 @@ subprojects {
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.

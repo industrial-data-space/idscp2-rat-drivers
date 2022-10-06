@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,22 +19,22 @@
  */
 package de.fhg.aisec.ids.tpm2d.example
 
-import de.fhg.aisec.ids.idscp2.default_drivers.secure_channel.tlsv1_3.NativeTLSDriver
-import de.fhg.aisec.ids.idscp2.default_drivers.secure_channel.tlsv1_3.NativeTlsConfiguration
-import de.fhg.aisec.ids.idscp2.idscp_core.api.Idscp2EndpointListener
-import de.fhg.aisec.ids.idscp2.idscp_core.api.configuration.Idscp2Configuration
-import de.fhg.aisec.ids.idscp2.idscp_core.api.idscp_connection.Idscp2Connection
-import de.fhg.aisec.ids.idscp2.idscp_core.api.idscp_connection.Idscp2ConnectionAdapter
-import de.fhg.aisec.ids.idscp2.idscp_core.api.idscp_connection.Idscp2ConnectionImpl
-import de.fhg.aisec.ids.idscp2.idscp_core.api.idscp_server.Idscp2ServerFactory
-import de.fhg.aisec.ids.idscp2.idscp_core.ra_registry.RaProverDriverRegistry
-import de.fhg.aisec.ids.idscp2.idscp_core.ra_registry.RaVerifierDriverRegistry
+import de.fhg.aisec.ids.idscp2.core.api.Idscp2EndpointListener
+import de.fhg.aisec.ids.idscp2.core.api.configuration.Idscp2Configuration
+import de.fhg.aisec.ids.idscp2.core.api.connection.Idscp2Connection
+import de.fhg.aisec.ids.idscp2.core.api.connection.Idscp2ConnectionAdapter
+import de.fhg.aisec.ids.idscp2.core.api.connection.Idscp2ConnectionImpl
+import de.fhg.aisec.ids.idscp2.core.api.server.Idscp2ServerFactory
+import de.fhg.aisec.ids.idscp2.core.raregistry.RaProverDriverRegistry
+import de.fhg.aisec.ids.idscp2.core.raregistry.RaVerifierDriverRegistry
+import de.fhg.aisec.ids.idscp2.defaultdrivers.securechannel.tls13.NativeTLSDriver
+import de.fhg.aisec.ids.idscp2.defaultdrivers.securechannel.tls13.NativeTlsConfiguration
 import de.fhg.aisec.ids.tpm2d.TpmHelper
 import de.fhg.aisec.ids.tpm2d.messages.TpmAttestation
-import de.fhg.aisec.ids.tpm2d.tpm2d_prover.TpmProver
-import de.fhg.aisec.ids.tpm2d.tpm2d_prover.TpmProverConfig
-import de.fhg.aisec.ids.tpm2d.tpm2d_verifier.TpmVerifier
-import de.fhg.aisec.ids.tpm2d.tpm2d_verifier.TpmVerifierConfig
+import de.fhg.aisec.ids.tpm2d.prover.TpmProver
+import de.fhg.aisec.ids.tpm2d.prover.TpmProverConfig
+import de.fhg.aisec.ids.tpm2d.verifier.TpmVerifier
+import de.fhg.aisec.ids.tpm2d.verifier.TpmVerifierConfig
 import org.slf4j.LoggerFactory
 import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
@@ -42,7 +42,6 @@ import java.util.Objects
 
 class Idscp2ServerInitiator : Idscp2EndpointListener<Idscp2Connection> {
     fun init(configuration: Idscp2Configuration, nativeTlsConfiguration: NativeTlsConfiguration) {
-
         // create secure channel driver
         val secureChannelDriver = NativeTLSDriver<Idscp2Connection>()
 
@@ -52,7 +51,9 @@ class Idscp2ServerInitiator : Idscp2EndpointListener<Idscp2Connection> {
             .setTpmPort(TpmProverConfig.DEFAULT_TPM_PORT)
             .build()
         RaProverDriverRegistry.registerDriver(
-            TpmProver.ID, ::TpmProver, proverConfig
+            TpmProver.ID,
+            ::TpmProver,
+            proverConfig
         )
 
         // RAT verifier configuration
@@ -71,7 +72,8 @@ class Idscp2ServerInitiator : Idscp2EndpointListener<Idscp2Connection> {
         val verifierConfig = TpmVerifierConfig.Builder()
             .setLocalCertificate(
                 TpmHelper.loadCertificateFromKeystore(
-                    nativeTlsConfiguration.keyStorePath, nativeTlsConfiguration.keyStorePassword,
+                    nativeTlsConfiguration.keyStorePath,
+                    nativeTlsConfiguration.keyStorePassword,
                     "1"
                 )
             )
@@ -82,7 +84,9 @@ class Idscp2ServerInitiator : Idscp2EndpointListener<Idscp2Connection> {
 //            .setExpectedAttestationMask(0x0603ff)
             .build()
         RaVerifierDriverRegistry.registerDriver(
-            TpmVerifier.ID, ::TpmVerifier, verifierConfig
+            TpmVerifier.ID,
+            ::TpmVerifier,
+            verifierConfig
         )
 
         // create server config
@@ -93,8 +97,10 @@ class Idscp2ServerInitiator : Idscp2EndpointListener<Idscp2Connection> {
             secureChannelDriver,
             nativeTlsConfiguration
         )
+
         // run idscp2 server
-        @Suppress("UNUSED_VARIABLE") val idscp2Server = serverConfig.listen()
+        @Suppress("UNUSED_VARIABLE")
+        val idscp2Server = serverConfig.listen()
     }
 
     override fun onConnection(connection: Idscp2Connection) {
