@@ -82,7 +82,7 @@ func (s *AttestdServiceImpl) getVcekCertPath(report ar.AttestationReport) (strin
 	if err := binary.Write(hash, binary.LittleEndian, &report.ChipId); err != nil {
 		return "", fmt.Errorf("could not extend hash value: %w", err)
 	}
-	if err := binary.Write(hash, binary.LittleEndian, &report.ReportedTcb); err != nil {
+	if err := binary.Write(hash, binary.LittleEndian, &report.CurrentTcb); err != nil {
 		return "", fmt.Errorf("could not extend hash value: %w", err)
 	}
 
