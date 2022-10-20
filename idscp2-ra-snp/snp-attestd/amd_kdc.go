@@ -58,7 +58,7 @@ const (
 // should be cached.
 func FetchVcekCertForReport(report ar.AttestationReport) ([]byte, error) {
 	chipId := hex.EncodeToString(report.ChipId[:])
-	tcb := ar.DecodeTcbVersion(report.ReportedTcb)
+	tcb := ar.DecodeTcbVersion(report.CurrentTcb)
 
 	vcekUrl := fmt.Sprintf(
 		"%s/%s?blSPL=%d&teeSPL=%d&snpSPL=%d&ucodeSPL=%d",
@@ -98,7 +98,7 @@ func FetchVcekCertForReport(report ar.AttestationReport) ([]byte, error) {
 // the corresponding attestation report.
 func VerifyVcekCertificateExtensions(vcekCert *x509.Certificate, report ar.AttestationReport) bool {
 	knownExtensions := make(map[string]interface{}, 5)
-	tcb := ar.DecodeTcbVersion(report.ReportedTcb)
+	tcb := ar.DecodeTcbVersion(report.CurrentTcb)
 
 	// Populate known extensions
 	knownExtensions[microcodeOID] = tcb.Microcode
