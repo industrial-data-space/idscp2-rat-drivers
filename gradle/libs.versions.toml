@@ -10,6 +10,7 @@ grpc = "1.49.2"
 grpcKotlin = "1.3.0"
 tss = "1.0.0"
 jose4j = "0.9.0"
+javaxAnnotations = "1.3.2"
 
 junit4 = "4.13.2"
 mockito = "4.8.0"
@@ -29,6 +30,7 @@ grpc-stub = { group = "io.grpc", name = "grpc-stub", version.ref = "grpc" }
 grpc-kotlinStub = { group = "io.grpc", name = "grpc-kotlin-stub", version.ref = "grpcKotlin" }
 tss = { group = "com.microsoft.azure", name = "TSS.Java", version.ref = "tss" }
 jose4j = { group = "org.bitbucket.b_c", name = "jose4j", version.ref = "jose4j" }
+javax-annotations = { group = "javax.annotation", name = "javax.annotation-api", version.ref = "javaxAnnotations" }
 
 junit = { group = "junit", name = "junit", version.ref = "junit4" }
 mockito = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }

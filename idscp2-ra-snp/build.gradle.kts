@@ -1,10 +1,9 @@
-import com.google.protobuf.gradle.*
+import com.google.protobuf.gradle.generateProtoTasks
+import com.google.protobuf.gradle.id
+import com.google.protobuf.gradle.plugins
+import com.google.protobuf.gradle.protobuf
+import com.google.protobuf.gradle.protoc
 import org.gradle.plugins.ide.idea.model.IdeaModel
-
-val versions = mapOf(
-    "annotations" to "1.3.2",
-    "jose4j" to "0.7.12",
-)
 
 apply(plugin = "com.google.protobuf")
 apply(plugin = "idea")
@@ -15,28 +14,34 @@ tasks.named("spotlessKotlin") {
 }
 
 dependencies {
-    implementation("com.google.protobuf", "protobuf-java", "${rootProject.ext["protobufVersion"]}")
-    implementation("io.grpc", "grpc-protobuf", "${rootProject.ext["grpcVersion"]}")
-    implementation("io.grpc", "grpc-stub", "${rootProject.ext["grpcVersion"]}")
-    implementation("io.grpc", "grpc-netty", "${rootProject.ext["grpcVersion"]}")
-    implementation("javax.annotation", "javax.annotation-api", versions["annotations"])
-    implementation("org.bitbucket.b_c", "jose4j", versions["jose4j"])
-    implementation("com.google.code.gson", "gson", "${rootProject.ext["gson"]}")
+    implementation(libs.kotlinx.coroutines)
+    implementation(libs.bundles.protobuf)
+    implementation(libs.bundles.grpc)
+    implementation(libs.javax.annotations)
+    implementation(libs.jose4j)
+    implementation(libs.gson)
 }
 
 val generatedProtoBaseDir = "$projectDir/generated"
 
 protobuf {
     generatedFilesBaseDir = generatedProtoBaseDir
+    protoc {
+        artifact = "com.google.protobuf:protoc:${libs.versions.protobuf.get()}"
+    }
     plugins {
         id("grpc") {
-            artifact = "io.grpc:protoc-gen-grpc-java:${rootProject.ext["grpcVersion"]}"
+            artifact = "io.grpc:protoc-gen-grpc-java:${libs.versions.grpc.get()}"
+        }
+        id("grpckt") {
+            artifact = "io.grpc:protoc-gen-grpc-kotlin:${libs.versions.grpcKotlin.get()}:jdk8@jar"
         }
     }
     generateProtoTasks {
-        for (p in all()) {
-            p.plugins {
+        all().forEach {
+            it.plugins {
                 id("grpc")
+                id("grpckt")
             }
         }
     }
@@ -53,7 +58,7 @@ configure<IdeaModel> {
     module {
         generatedSourceDirs.addAll(
             sequenceOf("grpc", "java")
-                .map { File("$generatedProtoBaseDir/main/${it}") }
+                .map { File("$generatedProtoBaseDir/main/$it") }
         )
     }
 }
