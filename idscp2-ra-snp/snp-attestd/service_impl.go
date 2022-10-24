@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -105,22 +105,24 @@ func (s *AttestdServiceImpl) getVcekCert(report ar.AttestationReport) ([]byte, e
 
 	_, err = os.Stat(filePath)
 	if err != nil {
-		// If the file does not exist, we can fetch it
-		// If any other error occurs, we complain
+		// Warn if the reason we could not stat the certificate was anything other than that it does not exist
 		if !errors.Is(err, fs.ErrNotExist) {
-			return []byte{}, fmt.Errorf("could not stat the cached certificate: %w", err)
+			log.Warn("could not stat the cached certificate: %v", err)
 		}
 
-		// Create the vcek cache directory, if it does not exist
-		if err := os.MkdirAll(s.config.CacheDir, 0755); err != nil {
-			log.Debug("VCEK cache dir does not exist at %s. Creating...", s.config.CacheDir)
-			return []byte{}, fmt.Errorf("the VCEK cache dir does not exist and could not be created: %w", err)
-		}
-
+		// Since we cannot stat the certificate file, we need to fetch it
 		log.Debug("Fetching VCEK certificate from AMD KDC")
 		certData, err := FetchVcekCertForReport(report)
 		if err != nil {
 			return []byte{}, fmt.Errorf("could not fetch VCEK certificate: %w", err)
+		}
+
+		// Not that we have the certificate, we can try to write it to cache
+
+		// Create the vcek cache directory, if it does not exist
+		if err := os.MkdirAll(s.config.CacheDir, 0755); err != nil {
+			log.Warn("the VCEK cache dir does not exist and could not be created: %v", err)
+			return certData, nil
 		}
 
 		// Write certificate to disk
