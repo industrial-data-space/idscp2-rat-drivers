@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,10 +29,10 @@ import (
 
 // The GreaterEqual policy ensures, that a field of the attestation report is greater or equal to a
 // minimum value.
-// The field and minimum value are both interpreted as little-endian encoded byte arrays. 
+// The field and minimum value are both interpreted as little-endian encoded byte arrays.
 // The values are then converted to big endian and compared lexicographically.
 // This way, the order of numeric data is preserved.
-// This policy is usefull for fields containing versions like the GUEST_SVN field.
+// This policy is useful for fields containing versions like the GUEST_SVN field.
 // For TCB versions, use the TcbGreaterEqual policy.
 type GreaterEqual struct {
 	Field        string `json:"field"`

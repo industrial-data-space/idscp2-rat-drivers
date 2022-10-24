@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -60,8 +60,8 @@ func buildFieldSelectorTable() map[string](fieldSelector) {
 	// Iterate through all fields in the attestation report
 	for i := 0; i < reflectType.NumField(); i++ {
 		field := reflectType.Field(i)
-		// Skip the field if it does not have a fieldName tag
-		// The fileName tag maps the go field to the field name given in
+		// Skip the field if it does not have a json name tag
+		// The json tag maps the go field to the field name given in
 		// https://www.amd.com/system/files/TechDocs/56860.pdf, Table 21
 		tag, ok := field.Tag.Lookup("json")
 		if !ok {

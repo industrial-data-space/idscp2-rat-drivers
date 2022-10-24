@@ -102,7 +102,7 @@ func (dev *SnpDevice) GetReport(reportData []byte) (ar.AttestationReport, error)
 
 	// Here comes the somewhat risky part...
 	// Go technically forbids storing pointers to go memory in structures passed to C.
-	// I think that this referes to pointers referring to garbage collected structs, as the go
+	// I think that this refers to pointers referring to garbage collected structs, as the go
 	// runtime might free them while they are still used by C code.
 	// Since we only point to the same memory block, we should be fine.
 	// Also, if go decides to implement a compacting garbage collector in the future, the runtime
@@ -116,7 +116,7 @@ func (dev *SnpDevice) GetReport(reportData []byte) (ar.AttestationReport, error)
 
 	// Copy the ioctl struct into the memory buffer.
 	// We don't have to do any encoding here, as the go struct currently has the same layout
-	// as its C conterpart.
+	// as its C counterpart.
 	// It would probably be better to properly encode the data in the future.
 	copy(memory, unsafe.Slice((*byte)(unsafe.Pointer(&ioctl)), guestRequestIoctlSize))
 

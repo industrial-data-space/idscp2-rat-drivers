@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -79,7 +79,7 @@ type AttestationReport struct {
 const signatureOffset = 0x2a0
 
 // Verify the signature of an attestation report against a VCEK certificate.
-// In order to avoid re-encoding the attestationn report, the raw report is also passed to this
+// In order to avoid re-encoding the attestation report, the raw report is also passed to this
 // function.
 func (a *AttestationReport) VerifySignature(rawReport []byte, vcekCert *x509.Certificate) (bool, error) {
 	if len(rawReport) < signatureOffset {

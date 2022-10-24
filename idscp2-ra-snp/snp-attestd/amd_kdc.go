@@ -25,12 +25,12 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
-	"log"
+	"io"
 	"net/http"
 	"time"
 
 	ar "github.com/industrial-data-space/idscp2-rat-drivers/idscp2-ra-snp/snp-attestd/attestation_report"
+	log "github.com/industrial-data-space/idscp2-rat-drivers/idscp2-ra-snp/snp-attestd/logger"
 )
 
 const (
@@ -82,7 +82,7 @@ func FetchVcekCertForReport(report ar.AttestationReport) ([]byte, error) {
 			return []byte{}, fmt.Errorf("the HTTP request returned an error: %s", resp.Status)
 		}
 
-		content, err := ioutil.ReadAll(resp.Body)
+		content, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return []byte{}, fmt.Errorf("could not read response from AMD KDS: %w", err)
 		}
@@ -152,7 +152,7 @@ func FetchVcekCertChain() (askCert []byte, arkCert []byte, err error) {
 		return
 	}
 
-	content, err := ioutil.ReadAll(resp.Body)
+	content, err := io.ReadAll(resp.Body)
 
 	askBlock, content := pem.Decode(content)
 	if askBlock == nil {
@@ -174,7 +174,7 @@ func FetchVcekCertChain() (askCert []byte, arkCert []byte, err error) {
 	}
 
 	if len(content) != 0 {
-		log.Printf("The certificate chain response from the AMD KDC contains unexpected additional data")
+		log.Debug("The certificate chain response from the AMD KDC contains unexpected additional data")
 	}
 
 	if arkBlock.Type != "CERTIFICATE" {

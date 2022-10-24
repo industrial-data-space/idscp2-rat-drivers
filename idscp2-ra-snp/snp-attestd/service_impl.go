@@ -87,7 +87,7 @@ func (s *AttestdServiceImpl) getVcekCertPath(report ar.AttestationReport) (strin
 	}
 
 	var pathBuilder strings.Builder
-	// The errors of strings.Builder are only here for interface compatibility and can sefely be ignored
+	// The errors of strings.Builder are only here for interface compatibility and can safely be ignored
 	pathBuilder.WriteString(s.config.CacheDir)
 	pathBuilder.WriteRune(os.PathSeparator)
 	pathBuilder.WriteString(hex.EncodeToString(hash.Sum(nil)))
@@ -106,7 +106,7 @@ func (s *AttestdServiceImpl) getVcekCert(report ar.AttestationReport) ([]byte, e
 	_, err = os.Stat(filePath)
 	if err != nil {
 		// If the file does not exist, we can fetch it
-		// If any other error occurrs, we complain
+		// If any other error occurs, we complain
 		if !errors.Is(err, fs.ErrNotExist) {
 			return []byte{}, fmt.Errorf("could not stat the cached certificate: %w", err)
 		}
