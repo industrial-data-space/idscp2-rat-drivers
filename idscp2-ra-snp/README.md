@@ -5,9 +5,7 @@ Under the hood, the driver makes use of snp-attestd, a service that fetches and 
 
 ## Configuring the driver
 
-### Prover
-
-The Prover is configured using the [SnpProverConfig](src/main/kotlin/de/fhg/aisec/ids/snp/SnpProverConfig.kt) class.
+Both the SNP Prover and Verifier are configured using the [SnpConfig](src/main/kotlin/de/fhg/aisec/ids/snp/SnpConfig.kt) class.
 The class provides a builder for easy construction:
 
 ```kotlin
@@ -18,20 +16,12 @@ The class provides a builder for easy construction:
 fun setCertificate(value: X509Certificate): Builder
 
 /**
- * Set the address used by snp-attestd.
- * This option overrides setSnpAttestdHost and setSnpAttestdPort.
- */
-fun setSnpAttestdAddress(value: SocketAddress): Builder
-
-/**
  * Set the hostname used by snp-attestd.
- * This option overrides setSnpAttestdAddress.
  */
 fun setSnpAttestdHost(value: String): Builder
 
 /**
  * Set the port used by snp-attestd.
- * This option overrides setSnpAttestdAddress.
  */
 fun setSnpAttestdPort(value: Int): Builder
 
@@ -42,13 +32,7 @@ fun setSnpAttestdPort(value: Int): Builder
 fun build(): SnpProverConfig
 ```
 
-By default, snpAttestdAddress is set to `tcp:127.0.0.1:6778`.
-
-### Verifier
-
-The Verifier is configured using the [SnpVeriferConfig](src/main/kotlin/de/fhg/aisec/ids/snp/SnpVerifierConfig.kt) class.
-This class can also be constructed using a builder object.
-The builder has the same methods as the `SnpProverConfig` builder.
+By default, the snp-attestd address is set to `127.0.0.1:6778`.
 
 ## Usage
 
@@ -56,7 +40,7 @@ The SNP Prover and Verifier can be used with the [JVM Implementation](https://gi
 
 ```kotlin
 // Setup the Prover 
-val proverConfig = SnpProverConfig.Builder()
+val proverConfig = SnpConfig.Builder()
     .setSnpAttestdHost("127.0.0.1")
     .setSnpAttestdPort(6778)
     .setCertificate(localCert)
@@ -70,7 +54,7 @@ RaProverDriverRegistry.registerDriver(
 )
 
 // Setup the Verifier
-val verifierConfig = SnpVerifierConfig.Builder()
+val verifierConfig = SnpConfig.Builder()
     .setSnpAttestdHost("127.0.0.1")
     .setSnpAttestdPort(6778)
     .setCertificate(localCert)

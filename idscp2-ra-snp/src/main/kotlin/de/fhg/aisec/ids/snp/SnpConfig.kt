@@ -53,7 +53,6 @@ class SnpConfig(
 
         /**
          * Set the hostname used by `snp-attestd`.
-         * This option overrides [setSnpAttestdAddress].
          */
         fun setSnpAttestdHost(value: String): Builder {
             host = value
@@ -62,7 +61,6 @@ class SnpConfig(
 
         /**
          * Set the port used by `snp-attestd`.
-         * This option overrides [setSnpAttestdAddress].
          */
         fun setSnpAttestdPort(value: Int): Builder {
             port = value
