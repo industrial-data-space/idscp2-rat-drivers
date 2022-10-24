@@ -24,7 +24,7 @@ import java.security.cert.X509Certificate
 /**
  * Configuration parameters for the [SnpProver] class.
  * Instances of this class can be created using [SnpConfig.Builder].
- * @constructor Directly creates the config witout using the builder.
+ * @constructor Directly creates the config without using the builder.
  * @param certificate The X.509 certificate used to establish the secure channel.
  * @param snpAttestdAddress The socket address of the `snp-attestd` instance to use.
  * Defaults to TCP port 6778 on the local host.
