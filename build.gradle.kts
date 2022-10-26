@@ -14,7 +14,8 @@ plugins {
 
 val descriptions: Map<String, String> = mapOf(
     "idscp2-ra-tpm2d" to "IDSCP2 TPM 2.0 Remote Attestation Driver",
-    "idscp2-ra-cmc" to "IDSCP2 CMC Remote Attestation Driver"
+    "idscp2-ra-cmc" to "IDSCP2 CMC Remote Attestation Driver",
+    "idscp2-ra-snp" to "IDSCP2 SEV-SNP Remote Attestation Driver"
 )
 
 allprojects {
@@ -157,7 +158,7 @@ subprojects {
 
     spotless {
         kotlin {
-            target("**/*.kt")
+            target("**/src/**/*.kt")
             ktlint(libs.versions.ktlint.get())
             licenseHeader(
                 """/*-

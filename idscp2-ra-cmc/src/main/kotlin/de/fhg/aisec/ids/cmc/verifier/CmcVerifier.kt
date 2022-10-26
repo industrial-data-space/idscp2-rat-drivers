@@ -33,6 +33,7 @@ import de.fhg.aisec.ids.idscp2.core.drivers.RaVerifierDriver
 import de.fhg.aisec.ids.idscp2.core.fsm.InternalControlMessage
 import de.fhg.aisec.ids.idscp2.core.fsm.fsmListeners.RaVerifierFsmListener
 import io.grpc.ManagedChannelBuilder
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import java.nio.charset.StandardCharsets
@@ -170,7 +171,7 @@ class CmcVerifier(fsmListener: RaVerifierFsmListener) : RaVerifierDriver<CmcVeri
                 println(verificationRequest)
             }
 
-            val verificationResponse = runBlocking {
+            val verificationResponse = runBlocking(Dispatchers.IO) {
                 val channel = ManagedChannelBuilder.forAddress(config.cmcHost, config.cmcPort).usePlaintext().build()
                 val verificationResponse = CMCServiceGrpcKt.CMCServiceCoroutineStub(channel).verify(verificationRequest)
                 channel.shutdown().awaitTermination(5, TimeUnit.SECONDS)

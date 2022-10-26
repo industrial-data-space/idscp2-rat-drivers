@@ -30,6 +30,7 @@ import de.fhg.aisec.ids.idscp2.core.drivers.RaProverDriver
 import de.fhg.aisec.ids.idscp2.core.fsm.InternalControlMessage
 import de.fhg.aisec.ids.idscp2.core.fsm.fsmListeners.RaProverFsmListener
 import io.grpc.ManagedChannelBuilder
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import java.nio.charset.StandardCharsets
@@ -117,7 +118,7 @@ class CmcProver(fsmListener: RaProverFsmListener) : RaProverDriver<CmcProverConf
                 LOG.debug("Got rat challenge from rat verifier. Starting communication...")
             }
 
-            val attestationResponse = runBlocking {
+            val attestationResponse = runBlocking(Dispatchers.IO) {
                 val channel = ManagedChannelBuilder.forAddress(config.cmcHost, config.cmcPort).usePlaintext().build()
                 val attestationResponse = CMCServiceGrpcKt.CMCServiceCoroutineStub(channel).attest(
                     AttestationRequest.parseFrom(ratVerifierMsg)
