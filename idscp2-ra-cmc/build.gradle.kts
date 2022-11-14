@@ -18,6 +18,29 @@ dependencies {
     implementation(libs.bundles.grpc)
 }
 
+
+// Clears library JARs before copying
+val cleanLibs = tasks.create<Delete>("deleteLibs") {
+    delete("$buildDir/libs/libraryJars", "$buildDir/libs/projectJars")
+}
+// Copies all runtime library JARs to build/libs/lib
+val rootProjectDir: String = rootProject.projectDir.absolutePath
+val copyLibraryJars = tasks.create<Copy>("copyLibraryJars") {
+    from(
+        configurations.runtimeClasspath.get()
+    )
+    destinationDir = file("$buildDir/libs/libraryJars")
+    dependsOn(cleanLibs)
+}
+val copyProjectJars = tasks.create<Copy>("copyProjectJars") {
+    from(
+        configurations.runtimeClasspath.get()
+    )
+    destinationDir = file("$buildDir/libs/projectJars")
+    dependsOn(cleanLibs)
+}
+
+
 protobuf {
     protoc {
         artifact = "com.google.protobuf:protoc:${libs.versions.protobuf.get()}"

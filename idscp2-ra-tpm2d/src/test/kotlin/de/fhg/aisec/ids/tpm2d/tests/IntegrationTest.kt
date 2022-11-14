@@ -76,9 +76,11 @@ class IntegrationTest {
                     val request = TpmAttestation.RemoteToTpm.parseFrom(requestBytes)
 
                     // TODO
+                    @Suppress("UNUSED_VARIABLE")
                     val response = TpmAttestation.TpmToRemote.newBuilder()
                         .build()
 
+                    @Suppress("UNUSED_VARIABLE")
                     val responseBytes = request.toByteArray()
                     outs.writeInt(requestBytes.size)
                     outs.write(requestBytes)
