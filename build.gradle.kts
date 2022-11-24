@@ -128,27 +128,32 @@ subprojects {
             }
 
             repositories {
-                // mavenLocal()
-                maven {
-                    url = uri(
-                        if (version.toString().endsWith("SNAPSHOT")) {
-                            "https://oss.sonatype.org/content/repositories/snapshots"
-                        } else {
-                            "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-                        }
-                    )
+                if (project.hasProperty("publishLocal")) {
+                    mavenLocal()
+                } else {
+                    maven {
+                        url = uri(
+                            if (version.toString().endsWith("SNAPSHOT")) {
+                                "https://oss.sonatype.org/content/repositories/snapshots"
+                            } else {
+                                "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+                            }
+                        )
 
-                    credentials {
-                        username = project.findProperty("deployUsername") as? String
-                        password = project.findProperty("deployPassword") as? String
+                        credentials {
+                            username = project.findProperty("deployUsername") as? String
+                            password = project.findProperty("deployPassword") as? String
+                        }
                     }
                 }
             }
         }
 
-        signing {
-            useGpgCmd()
-            sign(publishing.publications.getByName("idscp2Library"))
+        if (project.hasProperty("publishLocal")) {
+            signing {
+                useGpgCmd()
+                sign(publishing.publications.getByName("idscp2Library"))
+            }
         }
     }
 
