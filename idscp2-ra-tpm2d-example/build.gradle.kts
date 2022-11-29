@@ -5,7 +5,8 @@ val testImplementation by configurations
 
 dependencies {
     implementation(project(":idscp2-ra-tpm2d"))
-
+    implementation(rootProject.libs.idscp2.core)
+    implementation(rootProject.libs.idscp2.daps)
     implementation(libs.slf4j.simple)
 }
 

@@ -21,9 +21,9 @@ package de.fhg.aisec.ids.snp
 
 import com.google.gson.Gson
 import com.google.protobuf.ByteString
-import de.fhg.aisec.ids.idscp2.core.drivers.RaVerifierDriver
-import de.fhg.aisec.ids.idscp2.core.fsm.InternalControlMessage
-import de.fhg.aisec.ids.idscp2.core.fsm.fsmListeners.RaVerifierFsmListener
+import de.fhg.aisec.ids.idscp2.api.drivers.RaVerifierDriver
+import de.fhg.aisec.ids.idscp2.api.fsm.InternalControlMessage
+import de.fhg.aisec.ids.idscp2.api.fsm.RaVerifierFsmListener
 import de.fhg.aisec.ids.snp.SnpAttestdProto.VerifyRequest
 import de.fhg.aisec.ids.snp.SnpVerifierProverProto.ProverResponse
 import de.fhg.aisec.ids.snp.SnpVerifierProverProto.VerifierChallenge

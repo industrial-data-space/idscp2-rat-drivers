@@ -19,15 +19,15 @@
  */
 package de.fhg.aisec.ids.tpm2d.tests
 
-import de.fhg.aisec.ids.idscp2.core.api.Idscp2EndpointListener
-import de.fhg.aisec.ids.idscp2.core.api.configuration.AttestationConfig
-import de.fhg.aisec.ids.idscp2.core.api.configuration.Idscp2Configuration
-import de.fhg.aisec.ids.idscp2.core.api.connection.Idscp2Connection
-import de.fhg.aisec.ids.idscp2.core.api.connection.Idscp2ConnectionImpl
-import de.fhg.aisec.ids.idscp2.core.api.server.Idscp2Server
-import de.fhg.aisec.ids.idscp2.core.api.server.Idscp2ServerFactory
-import de.fhg.aisec.ids.idscp2.core.raregistry.RaProverDriverRegistry
-import de.fhg.aisec.ids.idscp2.core.raregistry.RaVerifierDriverRegistry
+import de.fhg.aisec.ids.idscp2.api.Idscp2EndpointListener
+import de.fhg.aisec.ids.idscp2.api.configuration.AttestationConfig
+import de.fhg.aisec.ids.idscp2.api.configuration.Idscp2Configuration
+import de.fhg.aisec.ids.idscp2.api.connection.Idscp2Connection
+import de.fhg.aisec.ids.idscp2.api.raregistry.RaProverDriverRegistry
+import de.fhg.aisec.ids.idscp2.api.raregistry.RaVerifierDriverRegistry
+import de.fhg.aisec.ids.idscp2.api.server.Idscp2Server
+import de.fhg.aisec.ids.idscp2.api.server.Idscp2ServerFactory
+import de.fhg.aisec.ids.idscp2.core.connection.Idscp2ConnectionImpl
 import de.fhg.aisec.ids.idscp2.defaultdrivers.daps.nulldaps.NullDaps
 import de.fhg.aisec.ids.idscp2.defaultdrivers.securechannel.tls13.NativeTLSDriver
 import de.fhg.aisec.ids.idscp2.defaultdrivers.securechannel.tls13.NativeTlsConfiguration
@@ -42,7 +42,6 @@ import org.junit.Ignore
 import org.junit.Test
 import java.io.DataInputStream
 import java.io.DataOutputStream
-import java.lang.Exception
 import java.net.ServerSocket
 import java.nio.file.Paths
 import java.util.Objects

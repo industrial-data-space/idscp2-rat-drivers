@@ -20,9 +20,9 @@
 package de.fhg.aisec.ids.snp
 
 import com.google.protobuf.ByteString
-import de.fhg.aisec.ids.idscp2.core.drivers.RaProverDriver
-import de.fhg.aisec.ids.idscp2.core.fsm.InternalControlMessage
-import de.fhg.aisec.ids.idscp2.core.fsm.fsmListeners.RaProverFsmListener
+import de.fhg.aisec.ids.idscp2.api.drivers.RaProverDriver
+import de.fhg.aisec.ids.idscp2.api.fsm.InternalControlMessage
+import de.fhg.aisec.ids.idscp2.api.fsm.RaProverFsmListener
 import de.fhg.aisec.ids.snp.SnpAttestdProto.ReportRequest
 import de.fhg.aisec.ids.snp.SnpVerifierProverProto.ProverResponse
 import de.fhg.aisec.ids.snp.SnpVerifierProverProto.VerifierChallenge

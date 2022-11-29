@@ -1,12 +1,8 @@
-import com.google.protobuf.gradle.generateProtoTasks
 import com.google.protobuf.gradle.id
-import com.google.protobuf.gradle.plugins
-import com.google.protobuf.gradle.protobuf
-import com.google.protobuf.gradle.protoc
-import org.gradle.plugins.ide.idea.model.IdeaModel
 
-apply(plugin = "com.google.protobuf")
-apply(plugin = "idea")
+plugins {
+    alias(libs.plugins.protobuf)
+}
 
 tasks.named("spotlessKotlin") {
     dependsOn("generateProto")
@@ -22,10 +18,7 @@ dependencies {
     implementation(libs.gson)
 }
 
-val generatedProtoBaseDir = "$projectDir/generated"
-
 protobuf {
-    generatedFilesBaseDir = generatedProtoBaseDir
     protoc {
         artifact = "com.google.protobuf:protoc:${libs.versions.protobuf.get()}"
     }
@@ -44,21 +37,5 @@ protobuf {
                 id("grpckt")
             }
         }
-    }
-}
-
-tasks.named("clean") {
-    doLast {
-        delete(generatedProtoBaseDir)
-    }
-}
-
-// Include generated grpc files in the ide model
-configure<IdeaModel> {
-    module {
-        generatedSourceDirs.addAll(
-            sequenceOf("grpc", "java")
-                .map { File("$generatedProtoBaseDir/main/$it") }
-        )
     }
 }

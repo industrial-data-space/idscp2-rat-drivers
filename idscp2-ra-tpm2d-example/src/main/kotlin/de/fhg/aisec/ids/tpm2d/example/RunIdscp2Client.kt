@@ -19,12 +19,12 @@
  */
 package de.fhg.aisec.ids.tpm2d.example
 
-import de.fhg.aisec.ids.idscp2.core.api.configuration.AttestationConfig
-import de.fhg.aisec.ids.idscp2.core.api.configuration.Idscp2Configuration
-import de.fhg.aisec.ids.idscp2.defaultdrivers.daps.aisecdaps.AisecDapsDriver
-import de.fhg.aisec.ids.idscp2.defaultdrivers.daps.aisecdaps.AisecDapsDriverConfig
-import de.fhg.aisec.ids.idscp2.defaultdrivers.daps.aisecdaps.SecurityProfile
-import de.fhg.aisec.ids.idscp2.defaultdrivers.daps.aisecdaps.SecurityRequirements
+import de.fhg.aisec.ids.idscp2.api.configuration.AttestationConfig
+import de.fhg.aisec.ids.idscp2.api.configuration.Idscp2Configuration
+import de.fhg.aisec.ids.idscp2.daps.aisecdaps.AisecDapsDriver
+import de.fhg.aisec.ids.idscp2.daps.aisecdaps.AisecDapsDriverConfig
+import de.fhg.aisec.ids.idscp2.daps.aisecdaps.SecurityProfile
+import de.fhg.aisec.ids.idscp2.daps.aisecdaps.SecurityRequirements
 import de.fhg.aisec.ids.idscp2.defaultdrivers.securechannel.tls13.NativeTlsConfiguration
 import de.fhg.aisec.ids.tpm2d.prover.TpmProver
 import de.fhg.aisec.ids.tpm2d.verifier.TpmVerifier

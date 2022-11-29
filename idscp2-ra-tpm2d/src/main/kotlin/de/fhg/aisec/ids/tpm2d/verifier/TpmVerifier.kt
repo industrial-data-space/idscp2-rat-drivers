@@ -19,9 +19,9 @@
  */
 package de.fhg.aisec.ids.tpm2d.verifier
 
-import de.fhg.aisec.ids.idscp2.core.drivers.RaVerifierDriver
-import de.fhg.aisec.ids.idscp2.core.fsm.InternalControlMessage
-import de.fhg.aisec.ids.idscp2.core.fsm.fsmListeners.RaVerifierFsmListener
+import de.fhg.aisec.ids.idscp2.api.drivers.RaVerifierDriver
+import de.fhg.aisec.ids.idscp2.api.fsm.InternalControlMessage
+import de.fhg.aisec.ids.idscp2.api.fsm.RaVerifierFsmListener
 import de.fhg.aisec.ids.tpm2d.TpmException
 import de.fhg.aisec.ids.tpm2d.TpmHelper
 import de.fhg.aisec.ids.tpm2d.TpmMessageFactory

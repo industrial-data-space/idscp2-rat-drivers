@@ -26,9 +26,9 @@ import de.fhg.aisec.ids.cmcinterface.AttestationRequest
 import de.fhg.aisec.ids.cmcinterface.CMCServiceGrpcKt
 import de.fhg.aisec.ids.cmcinterface.Status
 import de.fhg.aisec.ids.cmcinterface.VerificationResponse
-import de.fhg.aisec.ids.idscp2.core.drivers.RaProverDriver
-import de.fhg.aisec.ids.idscp2.core.fsm.InternalControlMessage
-import de.fhg.aisec.ids.idscp2.core.fsm.fsmListeners.RaProverFsmListener
+import de.fhg.aisec.ids.idscp2.api.drivers.RaProverDriver
+import de.fhg.aisec.ids.idscp2.api.fsm.InternalControlMessage
+import de.fhg.aisec.ids.idscp2.api.fsm.RaProverFsmListener
 import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking

@@ -24,11 +24,17 @@ allprojects {
 
     repositories {
         mavenCentral()
+        mavenLocal()
     }
+
+    val versionRegex = ".*(rc-?[0-9]*|beta)$".toRegex(RegexOption.IGNORE_CASE)
 
     tasks.withType<com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask> {
         rejectVersionIf {
-            ".*(rc-?[0-9]*|beta)$".toRegex(RegexOption.IGNORE_CASE).matches(candidate.version)
+            // Reject release candidates and betas and pin Apache Camel to 3.18 LTS version
+            versionRegex.matches(candidate.version) || (candidate.group in setOf(
+                "org.apache.camel", "org.apache.camel.springboot"
+            ) && !candidate.version.startsWith("3.18"))
         }
     }
 }
@@ -36,6 +42,10 @@ allprojects {
 subprojects {
     apply(plugin = "java")
     apply(plugin = "kotlin")
+
+    tasks.withType<Javadoc> {
+        exclude("de/fhg/aisec/ids/idscp2/messages/**", "de/fhg/aisec/ids/idscp2/applayer/messages/**")
+    }
 
     java {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -66,7 +76,7 @@ subprojects {
 
     dependencies {
         implementation(rootProject.libs.slf4j.api)
-        implementation(rootProject.libs.idscp2)
+        implementation(rootProject.libs.idscp2.api)
         implementation(rootProject.libs.kotlin.stdlib)
         testImplementation(rootProject.libs.slf4j.simple)
     }
@@ -163,7 +173,7 @@ subprojects {
 
     spotless {
         kotlin {
-            target("**/src/**/*.kt")
+            target("src/*/kotlin/**/*.kt")
             ktlint(libs.versions.ktlint.get())
             licenseHeader(
                 """/*-
