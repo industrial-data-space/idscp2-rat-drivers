@@ -163,7 +163,7 @@ subprojects {
             }
         }
 
-        if (project.hasProperty("publishLocal")) {
+        if (!project.hasProperty("publishLocal")) {
             signing {
                 useGpgCmd()
                 sign(publishing.publications.getByName("idscp2Library"))
