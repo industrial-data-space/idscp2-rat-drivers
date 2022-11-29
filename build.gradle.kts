@@ -44,7 +44,11 @@ subprojects {
     apply(plugin = "kotlin")
 
     tasks.withType<Javadoc> {
-        exclude("de/fhg/aisec/ids/idscp2/messages/**", "de/fhg/aisec/ids/idscp2/applayer/messages/**")
+        exclude(
+            "de/fhg/aisec/ids/cmcinterface/**",
+            "de/fhg/aisec/ids/snp/**",
+            "de/fhg/aisec/ids/tpm2d/**"
+        )
     }
 
     java {
