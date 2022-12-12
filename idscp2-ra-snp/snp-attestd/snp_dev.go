@@ -77,7 +77,6 @@ type reportResp struct {
 	Status     uint32
 	ReportSize uint32
 	Reserved   [24]byte
-	Report     ar.AttestationReport
 }
 
 const reportRespSize = unsafe.Sizeof(reportResp{})
@@ -95,16 +94,17 @@ const snpGetReportIoctl = 0xc0205300
 
 // Obtain an attestation report from the SEV firmware containing the specified reportData.
 // This function wraps the SNP_GET_REPORT IOCTL on the SEV-SNP guest device.
-func (dev *SnpDevice) GetReport(reportData []byte) (ar.AttestationReport, error) {
+func (dev *SnpDevice) GetReport(reportData []byte) (parsed ar.AttestationReport, raw []byte, err error) {
 	if len(reportData) > 64 {
-		return ar.AttestationReport{}, fmt.Errorf("expected up to 64 bytes of report data. Got %d bytes", len(reportData))
+		err = fmt.Errorf("expected up to 64 bytes of report data. Got %d bytes", len(reportData))
+		return
 	}
 
 	// Allocate a chunk of memory from the heap in order to store values related to the ioctl.
 	// Since all values are stored in the same chunk, the go garbage collector should collect
 	// them all at once.
 	// The current garbage collector does not move objects on the heap, I believe.
-	memory := make([]byte, guestRequestIoctlSize+reportReqSize+reportRespSize)
+	memory := make([]byte, guestRequestIoctlSize+reportReqSize+reportRespSize+ar.ReportSize)
 	memoryAddress := uintptr(unsafe.Pointer(&memory[0]))
 
 	// Here comes the somewhat risky part...
@@ -137,8 +137,9 @@ func (dev *SnpDevice) GetReport(reportData []byte) (ar.AttestationReport, error)
 		copy(memory[guestRequestIoctlSize:], unsafe.Slice((*byte)(unsafe.Pointer(&req)), reportReqSize))
 
 		// Pass the address of our memory object to the ioctl
-		if err := unix.IoctlSetInt(int(dev.file.Fd()), snpGetReportIoctl, int(memoryAddress)); err != nil {
-			return ar.AttestationReport{}, fmt.Errorf("error issuing ioctl on snp device: %w", err)
+		if e := unix.IoctlSetInt(int(dev.file.Fd()), snpGetReportIoctl, int(memoryAddress)); e != nil {
+			err = fmt.Errorf("error issuing ioctl on snp device: %w", e)
+			return
 		}
 
 		// Copy back the ioctl structure as the firmware response code is now set.
@@ -152,8 +153,9 @@ func (dev *SnpDevice) GetReport(reportData []byte) (ar.AttestationReport, error)
 		// Since the response comes straight from the firmware, it is packed data.
 		// The data fits in memory, as the packed data is at maximum the same size as reportResp.
 		var resp reportResp
-		if err := binary.Read(bytes.NewReader(memory[guestRequestIoctlSize+reportReqSize:]), binary.LittleEndian, &resp); err != nil {
-			return ar.AttestationReport{}, fmt.Errorf("could not decode the attestation report from the firmware response: %w", err)
+		if e := binary.Read(bytes.NewReader(memory[guestRequestIoctlSize+reportReqSize:]), binary.LittleEndian, &resp); e != nil {
+			err = fmt.Errorf("could not decode the attestation report from the firmware response: %w", e)
+			return 
 		}
 
 		switch resp.Status {
@@ -166,15 +168,25 @@ func (dev *SnpDevice) GetReport(reportData []byte) (ar.AttestationReport, error)
 			continue
 		default:
 			// Other errors
-			return ar.AttestationReport{}, fmt.Errorf("the attestation response contains a non-zero status code: %x", resp.Status)
+			err = fmt.Errorf("the attestation response contains a non-zero status code: %x", resp.Status)
+			return
 		}
 
 		if dev.suspectedVMPL != localVMPL {
 			logger.Debug("Setting suspected VMPL to %d", localVMPL)
 			dev.suspectedVMPL = localVMPL
 		}
-		return resp.Report, nil
+
+		reportOffset := guestRequestIoctlSize + reportReqSize + reportRespSize
+		rawReport := memory[reportOffset:reportOffset+ar.ReportSize]
+		deserialized, e := ar.Deserialize(rawReport)
+		if e != nil {
+			err = fmt.Errorf("failed to parse report: %e", e)
+			return
+		}
+		return deserialized, rawReport, nil
 	}
 
-	return ar.AttestationReport{}, fmt.Errorf("could not fetch a report at any VMPL")
+	err = fmt.Errorf("could not fetch a report at any VMPL")
+	return
 }

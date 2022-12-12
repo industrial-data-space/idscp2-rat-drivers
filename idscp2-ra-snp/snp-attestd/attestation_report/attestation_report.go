@@ -20,9 +20,11 @@
 package attestation_report
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"crypto/sha512"
 	"crypto/x509"
+	"encoding/binary"
 	"fmt"
 	"math/big"
 )
@@ -45,6 +47,8 @@ type AttestationReport struct {
 	CurrentTcb      uint64   `json:"CURRENT_TCB"` // platform_version
 	PlatformInfo    uint64   `json:"PLATFORM_INFO"`
 	AuthorKeyEn     uint32   `json:"AUTHOR_KEY_EN"`
+	MaskChipKey     uint32   `json:"MASK_CHIP_KEY"`
+	SigningKey		uint32   `json:"SIGNING_KEY"`
 	Reserved1       uint32
 	ReportData      [64]byte `json:"REPORT_DATA"`
 	Measurement     [48]byte `json:"MEASUREMENT"`
@@ -72,6 +76,68 @@ type AttestationReport struct {
 	SignatureR [72]byte
 	SignatureS [72]byte
 	Reserved4  [368]byte
+}
+
+const ReportSize = 0xA0
+
+// Since the report contains bit fields we need to deserialize manually as Go does not handle them well
+func Deserialize(rawReport []byte) (AttestationReport, error) {
+	if len(rawReport) < ReportSize {
+		return AttestationReport{}, fmt.Errorf("the raw report is too small")
+	}
+
+	r := AttestationReport{}
+	reader := bytes.NewReader(rawReport)
+	read := func(field interface{}) {
+		// Reading from a byte buffer always succeeds if the buffer is big enough
+		// Since we ensured that earlier, we can ignore the error return value
+		binary.Read(reader, binary.LittleEndian, field)
+	}
+
+	read(&r.Version)
+	read(&r.GuestSvn)
+	read(&r.Policy)
+	read(&r.FamilyId)
+	read(&r.ImageId)
+	read(&r.Vmpl)
+	read(&r.SignatureAlgo)
+	read(&r.CurrentTcb)
+	read(&r.PlatformInfo)
+
+	// This here is the reason we need manual parsing:
+	var bitField uint32
+	read(&bitField)
+	r.AuthorKeyEn = bitField & 0b1
+	r.MaskChipKey = (bitField & 0b10) >> 1
+	r.SigningKey = (bitField & 0b11100) >> 2
+
+	read(&r.Reserved1)
+	read(&r.ReportData)
+	read(&r.Measurement)
+	read(&r.HostData)
+	read(&r.IdKeyDigest)
+	read(&r.AuthorKeyDigest)
+	read(&r.ReportId)
+	read(&r.ReportIdMa)
+	read(&r.ReportedTcb)
+	read(&r.Reserved2)
+	read(&r.ChipId)
+	read(&r.CommittedTcb)
+	read(&r.CurrentBuild)
+	read(&r.CurrentMinor)
+	read(&r.CurrentMajor)
+	read(&r.Reserved3a)
+	read(&r.CommittedBuild)
+	read(&r.CommittedMinor)
+	read(&r.CommittedMajor)
+	read(&r.Reserved3b)
+	read(&r.LaunchTcb)
+	read(&r.Reserved3c)
+	read(&r.SignatureR)
+	read(&r.SignatureS)
+	read(&r.Reserved4)
+	
+	return r, nil
 }
 
 // Offset of the signature field in the attestation report according to
