@@ -28,6 +28,6 @@ type Config struct {
 	// This directory currently also contains the VCEK certificate chain.
 	CacheDir string
 	// Only accept verify requests.
-	// This is usefull when the SNP guest device is not available.
+	// This is useful when the SNP guest device is not available.
 	VerifyOnly bool
 }

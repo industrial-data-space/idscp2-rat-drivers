@@ -131,7 +131,7 @@ func (dev *SnpDevice) GetReport(reportData []byte) (parsed ar.AttestationReport,
 	copy(req.userData[:], reportData)
 
 	localVMPL := dev.suspectedVMPL
-	// Try this multiple times with decreasing priviledges until the call works
+	// Try this multiple times with decreasing privileges until the call works
 	for localVMPL < 4 {
 		req.vmpl = localVMPL
 		copy(memory[guestRequestIoctlSize:], unsafe.Slice((*byte)(unsafe.Pointer(&req)), reportReqSize))
@@ -162,7 +162,7 @@ func (dev *SnpDevice) GetReport(reportData []byte) (parsed ar.AttestationReport,
 		case 0:
 			// Success
 		case 0x16:
-			// Invalid paramter -> Includes incorrect VMPL
+			// Invalid parameter -> Includes incorrect VMPL
 			logger.Warn("Could not obtain report at VMPL %d: status code 0x%x", localVMPL, resp.Status)
 			localVMPL++
 			continue
