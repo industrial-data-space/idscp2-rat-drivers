@@ -78,7 +78,7 @@ type AttestationReport struct {
 	Reserved4  [368]byte
 }
 
-const ReportSize = 0xA0
+const ReportSize = 0x4a0
 
 // Since the report contains bit fields we need to deserialize manually as Go does not handle them well
 func Deserialize(rawReport []byte) (AttestationReport, error) {

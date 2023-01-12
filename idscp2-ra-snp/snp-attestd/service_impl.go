@@ -20,7 +20,6 @@
 package snp_attestd
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha1"
 	"crypto/x509"
@@ -245,9 +244,11 @@ func (s *AttestdServiceImpl) VerifyReport(ctx context.Context, verifyRequest *pb
 		log.Trace("Policy: %s", verifyRequest.Policies)
 	}
 
-	var report ar.AttestationReport
-	reportBuf := bytes.NewReader(verifyRequest.Report)
-	binary.Read(reportBuf, binary.LittleEndian, &report)
+	report, err := ar.Deserialize(verifyRequest.Report)
+	if err != nil {
+		log.Debug("Received a report that could not be parsed")
+		return nil, fmt.Errorf("could not deserialize the attestation report: %e", err)
+	}
 
 	ask, ark, err := s.loadCertChain()
 	if err != nil {
