@@ -250,6 +250,12 @@ func (s *AttestdServiceImpl) VerifyReport(ctx context.Context, verifyRequest *pb
 		return nil, fmt.Errorf("could not deserialize the attestation report: %e", err)
 	}
 
+	// SigningKey = 0 means the report is signed by the VCEK
+	if report.SigningKey != 0 {
+		log.Debug("Received a report signed with an unsupported key")
+		return nil, fmt.Errorf("only reports signed by a VCEK are supported at this time")
+	}
+
 	ask, ark, err := s.loadCertChain()
 	if err != nil {
 		log.Err("Could not load the VCEK certificate chain: %v", err)
