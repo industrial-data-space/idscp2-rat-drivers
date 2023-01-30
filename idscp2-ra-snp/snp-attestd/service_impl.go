@@ -20,7 +20,6 @@
 package snp_attestd
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha1"
 	"crypto/x509"
@@ -211,7 +210,7 @@ func (s *AttestdServiceImpl) GetReport(ctx context.Context, reportRequest *pb.Re
 		log.Debug("Got a report request with report data %s", hex.EncodeToString(reportRequest.ReportData))
 	}
 
-	report, err := s.dev.GetReport(reportRequest.ReportData)
+	report, raw, err := s.dev.GetReport(reportRequest.ReportData)
 	if err != nil {
 		log.Err("Error retreiving report from the SEV firmware: %v", err)
 		return nil, errServer
@@ -226,14 +225,8 @@ func (s *AttestdServiceImpl) GetReport(ctx context.Context, reportRequest *pb.Re
 		}
 	}
 
-	reportBuffer := new(bytes.Buffer)
-	if err := binary.Write(reportBuffer, binary.LittleEndian, &report); err != nil {
-		log.Err("Could not encode attestation report: %v", err)
-		return nil, errServer
-	}
-
 	response := pb.ReportResponse{
-		Report:   reportBuffer.Bytes(),
+		Report:   raw,
 		VcekCert: vcekCert,
 	}
 
@@ -251,9 +244,17 @@ func (s *AttestdServiceImpl) VerifyReport(ctx context.Context, verifyRequest *pb
 		log.Trace("Policy: %s", verifyRequest.Policies)
 	}
 
-	var report ar.AttestationReport
-	reportBuf := bytes.NewReader(verifyRequest.Report)
-	binary.Read(reportBuf, binary.LittleEndian, &report)
+	report, err := ar.Deserialize(verifyRequest.Report)
+	if err != nil {
+		log.Debug("Received a report that could not be parsed")
+		return nil, fmt.Errorf("could not deserialize the attestation report: %e", err)
+	}
+
+	// SigningKey = 0 means the report is signed by the VCEK
+	if report.SigningKey != 0 {
+		log.Debug("Received a report signed with an unsupported key")
+		return nil, fmt.Errorf("only reports signed by a VCEK are supported at this time")
+	}
 
 	ask, ark, err := s.loadCertChain()
 	if err != nil {

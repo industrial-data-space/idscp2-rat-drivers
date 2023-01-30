@@ -46,7 +46,7 @@ const (
 	bootLoaderOID = "1.3.6.1.4.1.3704.1.3.1"
 	hwidOID       = "1.3.6.1.4.1.3704.1.4"
 
-	// Maximum number of tries when retreiving VCEK certificates from AMD
+	// Maximum number of tries when retrieving VCEK certificates from AMD
 	// Needed as the KDC only allows one request per IP every 10 seconds
 	// With this value, snp-attestd will try to get certificates for one minute before aborting
 	maxTries = 6
@@ -75,7 +75,7 @@ func FetchVcekCertForReport(report ar.AttestationReport) ([]byte, error) {
 		case 200:
 			// Success: do nothing
 		case 429:
-			// Too manny requests: Sleep for 10 seconds and try again
+			// Too many requests: Sleep for 10 seconds and try again
 			time.Sleep(time.Second * 10)
 			continue
 		default:

@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,6 +27,7 @@ import (
 	"unsafe"
 
 	ar "github.com/industrial-data-space/idscp2-rat-drivers/idscp2-ra-snp/snp-attestd/attestation_report"
+	"github.com/industrial-data-space/idscp2-rat-drivers/idscp2-ra-snp/snp-attestd/logger"
 
 	"golang.org/x/sys/unix"
 )
@@ -35,6 +36,8 @@ import (
 // Guest ioctls can be executed using methods on this type.
 type SnpDevice struct {
 	file *os.File
+	// Since there does not seem to be way to determine the VMPL we have to guess
+	suspectedVMPL uint32
 }
 
 // Opens the SEV-SNP guest device at the specified path.
@@ -45,7 +48,10 @@ func OpenSnpDevice(path string) (*SnpDevice, error) {
 		return nil, fmt.Errorf("failed to open SEV device: %w", err)
 	}
 
-	return &SnpDevice{file}, nil
+	return &SnpDevice{
+		file:          file,
+		suspectedVMPL: 0,
+	}, nil
 }
 
 type guestRequestIoctl struct {
@@ -71,7 +77,6 @@ type reportResp struct {
 	Status     uint32
 	ReportSize uint32
 	Reserved   [24]byte
-	Report     ar.AttestationReport
 }
 
 const reportRespSize = unsafe.Sizeof(reportResp{})
@@ -81,23 +86,25 @@ const reportRespSize = unsafe.Sizeof(reportResp{})
 // #include <stdio.h>
 // #include <linux/ioctl.h>
 // #include <linux/sev-guest.h>
-// int main() {
-//     printf("%x\n", SNP_GET_REPORT);
-// }
+//
+//	int main() {
+//	    printf("%x\n", SNP_GET_REPORT);
+//	}
 const snpGetReportIoctl = 0xc0205300
 
 // Obtain an attestation report from the SEV firmware containing the specified reportData.
 // This function wraps the SNP_GET_REPORT IOCTL on the SEV-SNP guest device.
-func (dev *SnpDevice) GetReport(reportData []byte) (ar.AttestationReport, error) {
+func (dev *SnpDevice) GetReport(reportData []byte) (parsed ar.AttestationReport, raw []byte, err error) {
 	if len(reportData) > 64 {
-		return ar.AttestationReport{}, fmt.Errorf("expected up to 64 bytes of report data. Got %d bytes", len(reportData))
+		err = fmt.Errorf("expected up to 64 bytes of report data. Got %d bytes", len(reportData))
+		return
 	}
 
 	// Allocate a chunk of memory from the heap in order to store values related to the ioctl.
 	// Since all values are stored in the same chunk, the go garbage collector should collect
 	// them all at once.
 	// The current garbage collector does not move objects on the heap, I believe.
-	memory := make([]byte, guestRequestIoctlSize+reportReqSize+reportRespSize)
+	memory := make([]byte, guestRequestIoctlSize+reportReqSize+reportRespSize+ar.ReportSize)
 	memoryAddress := uintptr(unsafe.Pointer(&memory[0]))
 
 	// Here comes the somewhat risky part...
@@ -123,31 +130,63 @@ func (dev *SnpDevice) GetReport(reportData []byte) (ar.AttestationReport, error)
 	req := reportReq{}
 	copy(req.userData[:], reportData)
 
-	copy(memory[guestRequestIoctlSize:], unsafe.Slice((*byte)(unsafe.Pointer(&req)), reportReqSize))
+	localVMPL := dev.suspectedVMPL
+	// Try this multiple times with decreasing privileges until the call works
+	for localVMPL < 4 {
+		req.vmpl = localVMPL
+		copy(memory[guestRequestIoctlSize:], unsafe.Slice((*byte)(unsafe.Pointer(&req)), reportReqSize))
 
-	// Pass the address of our memory object to the ioctl
-	if err := unix.IoctlSetInt(int(dev.file.Fd()), snpGetReportIoctl, int(memoryAddress)); err != nil {
-		return ar.AttestationReport{}, fmt.Errorf("error issuing ioctl on snp device: %w", err)
+		// Pass the address of our memory object to the ioctl
+		if e := unix.IoctlSetInt(int(dev.file.Fd()), snpGetReportIoctl, int(memoryAddress)); e != nil {
+			err = fmt.Errorf("error issuing ioctl on snp device: %w", e)
+			return
+		}
+
+		// Copy back the ioctl structure as the firmware response code is now set.
+		// Note: fwError checking is currently disabled as the firmware seems to set this to an invalid value.
+		//copy(unsafe.Slice((*byte)(unsafe.Pointer(&ioctl)), guestRequestIoctlSize), memory)
+		//if ioctl.fwError != 0 {
+		//	return AttestationReport{}, fmt.Errorf("The SEV firmware returned a non-zero error code: %x", ioctl.fwError)
+		//}
+
+		// Copy the response over from the memory buffer.
+		// Since the response comes straight from the firmware, it is packed data.
+		// The data fits in memory, as the packed data is at maximum the same size as reportResp.
+		var resp reportResp
+		if e := binary.Read(bytes.NewReader(memory[guestRequestIoctlSize+reportReqSize:]), binary.LittleEndian, &resp); e != nil {
+			err = fmt.Errorf("could not decode the attestation report from the firmware response: %w", e)
+			return 
+		}
+
+		switch resp.Status {
+		case 0:
+			// Success
+		case 0x16:
+			// Invalid parameter -> Includes incorrect VMPL
+			logger.Warn("Could not obtain report at VMPL %d: status code 0x%x", localVMPL, resp.Status)
+			localVMPL++
+			continue
+		default:
+			// Other errors
+			err = fmt.Errorf("the attestation response contains a non-zero status code: %x", resp.Status)
+			return
+		}
+
+		if dev.suspectedVMPL != localVMPL {
+			logger.Debug("Setting suspected VMPL to %d", localVMPL)
+			dev.suspectedVMPL = localVMPL
+		}
+
+		reportOffset := guestRequestIoctlSize + reportReqSize + reportRespSize
+		rawReport := memory[reportOffset:reportOffset+ar.ReportSize]
+		deserialized, e := ar.Deserialize(rawReport)
+		if e != nil {
+			err = fmt.Errorf("failed to parse report: %e", e)
+			return
+		}
+		return deserialized, rawReport, nil
 	}
 
-	// Copy back the ioctl structure as the firmware response code is now set.
-	// Note: fwError checking is currently disabled as the firmware seems to set this to an invalid value.
-	//copy(unsafe.Slice((*byte)(unsafe.Pointer(&ioctl)), guestRequestIoctlSize), memory)
-	//if ioctl.fwError != 0 {
-	//	return AttestationReport{}, fmt.Errorf("The SEV firmware returned a non-zero error code: %x", ioctl.fwError)
-	//}
-
-	// Copy the response over from the memory buffer.
-	// Since the response comes straight from the firmware, it is packed data.
-	// The data fits in memory, as the packed data is at maximum the same size as reportResp.
-	var resp reportResp
-	if err := binary.Read(bytes.NewReader(memory[guestRequestIoctlSize+reportReqSize:]), binary.LittleEndian, &resp); err != nil {
-		return ar.AttestationReport{}, fmt.Errorf("could not decode the attestation report from the firmware response: %w", err)
-	}
-
-	if resp.Status != 0 {
-		return ar.AttestationReport{}, fmt.Errorf("the attestation response contains a non-zero status code: %x", resp.Status)
-	}
-
-	return resp.Report, nil
+	err = fmt.Errorf("could not fetch a report at any VMPL")
+	return
 }
