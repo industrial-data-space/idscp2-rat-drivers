@@ -76,7 +76,7 @@ class SnpVerifier(fsmListener: RaVerifierFsmListener) : RaVerifierDriver<SnpConf
             .setSkipAllValidators()
             .build()
 
-        val claims = jwtConsumer.processToClaims(String(fsmListener.remotePeerDat, StandardCharsets.UTF_8))
+        val claims = jwtConsumer.processToClaims(String(fsmListener.remotePeerDat.bytes, StandardCharsets.UTF_8))
 
         val snpPolicies: MutableList<Any> = try {
             @Suppress("UNCHECKED_CAST")
@@ -126,7 +126,10 @@ class SnpVerifier(fsmListener: RaVerifierFsmListener) : RaVerifierDriver<SnpConf
             ProverResponse.parseFrom(proverResponseBytes)
         } catch (e: Exception) {
             fsmListener.onRaVerifierMessage(InternalControlMessage.RA_VERIFIER_FAILED)
-            throw SnpException("Got an unexpected or invalid message from the prover. Expected a prover challenge response.", e)
+            throw SnpException(
+                "Got an unexpected or invalid message from the prover. Expected a prover challenge response.",
+                e
+            )
         }
 
         // Calculate hash that should be contained within the attestation report

@@ -187,7 +187,7 @@ class TpmVerifier(fsmListener: RaVerifierFsmListener) : RaVerifierDriver<TpmVeri
             }
 
             // parse golden values from DAT
-            val goldenValues = PcrValues(fsmListener.remotePeerDat)
+            val goldenValues = PcrValues(fsmListener.remotePeerDat.bytes)
             if (LOG.isDebugEnabled) {
                 LOG.debug("Golden values from DAPS: $goldenValues")
             }

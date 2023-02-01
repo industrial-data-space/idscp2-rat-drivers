@@ -86,7 +86,11 @@ object TpmHelper {
      *
      * This requires that the private key is also in the keystore
      */
-    fun loadCertificateFromKeystore(keyStorePath: Path, keyStorePassword: CharArray, keyAlias: String): X509Certificate {
+    fun loadCertificateFromKeystore(
+        keyStorePath: Path,
+        keyStorePassword: CharArray,
+        keyAlias: String
+    ): X509Certificate {
         val ks = KeyStore.getInstance("PKCS12")
         Files.newInputStream(keyStorePath).use { keyStoreInputStream ->
             ks.load(keyStoreInputStream, keyStorePassword)

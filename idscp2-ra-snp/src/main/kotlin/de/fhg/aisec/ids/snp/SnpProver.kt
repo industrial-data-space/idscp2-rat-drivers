@@ -80,7 +80,10 @@ class SnpProver(fsmListener: RaProverFsmListener) : RaProverDriver<SnpConfig>(fs
             VerifierChallenge.parseFrom(verifierChallengeBytes)
         } catch (e: Exception) {
             fsmListener.onRaProverMessage(InternalControlMessage.RA_PROVER_FAILED)
-            throw SnpException("Encountered unexpected or invalid message from verifier. Expected a verifier challenge.", e)
+            throw SnpException(
+                "Encountered unexpected or invalid message from verifier. Expected a verifier challenge.",
+                e
+            )
         }
 
         // Got the nonce from the verifier
@@ -129,7 +132,10 @@ class SnpProver(fsmListener: RaProverFsmListener) : RaProverDriver<SnpConfig>(fs
             VerifierResult.parseFrom(verifierResultBytes)
         } catch (e: Exception) {
             fsmListener.onRaProverMessage(InternalControlMessage.RA_PROVER_FAILED)
-            throw SnpException("Got an unexpected or invalid message from the verifier. Expected a verifier result message.", e)
+            throw SnpException(
+                "Got an unexpected or invalid message from the verifier. Expected a verifier result message.",
+                e
+            )
         }
 
         if (verifierResult.ok) {
